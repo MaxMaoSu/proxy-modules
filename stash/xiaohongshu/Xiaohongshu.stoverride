@@ -1,9 +1,9 @@
-#SUBSCRIBED https://raw.githubusercontent.com/MaxMaoSu/stash-overrides/main/xiaohongshu/Xiaohongshu.stoverride
+#SUBSCRIBED https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/stash/xiaohongshu/Xiaohongshu.stoverride
 #!name = 小红书去广告
 #!desc = 过滤信息流推广与开屏广告，移除图片、视频水印
 name: 小红书去广告
 desc: 过滤信息流推广与开屏广告，移除图片、视频水印
-icon: 'https://raw.githubusercontent.com/MaxMaoSu/stash-overrides/main/xiaohongshu/xiaohongshu-icon.png'
+icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/xiaohongshu/xiaohongshu-icon.png'
 
 rules:
   # HTTP/3 完全绕过 MITM，不拦 QUIC 的话所有脚本都不会触发。
@@ -113,10 +113,10 @@ http:
 # 伪造响应与 body 改写全部走脚本。
 script-providers:
   xiaohongshu-mock:
-    url: https://raw.githubusercontent.com/MaxMaoSu/stash-overrides/main/xiaohongshu/xiaohongshu-mock-v1.js
+    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/xiaohongshu/xiaohongshu-mock-v1.js
     interval: 86400
   xiaohongshu-search:
-    url: https://raw.githubusercontent.com/MaxMaoSu/stash-overrides/main/xiaohongshu/xiaohongshu-search-v1.js
+    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/xiaohongshu/xiaohongshu-search-v1.js
     interval: 86400
   # RedPaper_remove_ads.js 锁定 Repcz/Tool 的 commit，避免上游改动导致行为漂移
   redpaper:

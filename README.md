@@ -1,13 +1,21 @@
-# stash-overrides
+# proxy-modules
 
-个人 Stash 覆写合集，通过 raw URL 订阅，改完 push 即生效。
+个人代理模块合集：Stash 覆写与 Surge 模块共用同一套 JS 脚本，通过 raw URL 订阅，改完 push 即生效。
 
-## 覆写列表
+## 模块列表
 
-| 覆写 | 适用 | 订阅地址 |
+| 模块 | Stash | Surge |
 |---|---|---|
-| Spotify 解锁 | iOS / macOS | `https://raw.githubusercontent.com/MaxMaoSu/stash-overrides/main/spotify/Spotify.stoverride` |
-| 小红书去广告 | iOS | `https://raw.githubusercontent.com/MaxMaoSu/stash-overrides/main/xiaohongshu/Xiaohongshu.stoverride` |
+| Spotify 解锁 | `https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/stash/spotify/Spotify.stoverride` | `https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/surge/spotify/Spotify.sgmodule` |
+| 小红书去广告 | `https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/stash/xiaohongshu/Xiaohongshu.stoverride` | 无 |
 
-新增覆写时在仓库根目录建同名文件夹，把 `.stoverride` 和它自带的脚本放在一起。
+## 目录约定
+
+```
+proxy-modules/
+├── shared/<模块>/     客户端无关的 JS 脚本与图标
+├── stash/<模块>/      .stoverride（Stash）
+└── surge/<模块>/      .sgmodule（Surge）
+```
+
 维护约定与技术细节见 [CLAUDE.md](CLAUDE.md)。

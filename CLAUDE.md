@@ -1,20 +1,20 @@
-# stash-overrides 维护约定
+# proxy-modules 维护约定
 
 ## 仓库结构
 
-一个覆写一个目录，覆写文件与它自带的脚本放在同一个目录下：
+按客户端分目录，客户端无关的 JS 与图标放 `shared/`：
 
 ```
-stash-overrides/
-├── README.md                仅枚举覆写列表与订阅地址，不写技术细节
+proxy-modules/
+├── README.md                仅枚举模块与订阅地址，不写技术细节
 ├── CLAUDE.md                本文件：维护约定与技术细节
-└── spotify/
-    ├── Spotify.stoverride
-    ├── spotify.png          覆写图标
-    └── spotify-strip304-v2.js
+├── shared/<模块>/           JS 脚本、图标（Stash 与 Surge 共用同一份）
+├── stash/<模块>/            <模块>.stoverride
+└── surge/<模块>/            <模块>.sgmodule
 ```
 
-新增覆写：建 `<类别>/` 目录，`.stoverride` + 图标 + 自写脚本都放进去，README 表格加一行。
+新增模块：三个目录各建同名子目录，README 表格加一行。
+脚本只写 `$request` / `$response` / `$done` 这套通用 API，两端才能共用。
 **每个覆写必须有图标**：`.stoverride` 用 `icon: '<raw URL>'` 指向同目录 PNG
 （512×512、透明底，优先产品官方 logo），不是 `#!icon`。
 图标必须清晰、居中：SVG 转 PNG 要 `-density 2400` + `-trim` + `-extent`，
@@ -37,6 +37,23 @@ stash-overrides/
 Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变），且可能在文件里
 重复追加 `#SUBSCRIBED` 行。此时直接改 iCloud 目录下的同名文件、只保留一行
 `#SUBSCRIBED`，再在菜单栏点「重新加载配置」。
+
+## Surge 模块
+
+`surge/<模块>/<模块>.sgmodule` 与 Stash 覆写是同一套策略，只是语法不同：
+
+| 能力 | Stash | Surge |
+|---|---|---|
+| 元信息 | `#!name =` / `#!desc =` / `icon:` | `#!name=` / `#!desc=` / `#!icon=` / `#!system=` |
+| 规则 | `rules:` 数组 | `[Rule]` 段，一行一条 |
+| MITM | `http.mitm` 数组 | `[MITM]` 的 `hostname = %APPEND% a, b` |
+| 脚本 | `http.script` 的 `match/name/type/timeout` | `[Script]`：`NAME = type=http-request|http-response, pattern="…", …` |
+| 响应体 | `require-body: true` | `requires-body=1` |
+| 二进制 | `binary-mode: true` | `binary-body-mode=1` |
+| 体积上限 | `max-size: 0`（不限） | `max-size=<字节>`，默认 1MB，大响应要显式给足 |
+
+脚本直接用 `shared/` 的同一份文件（只依赖 `$request` / `$response` / `$done`），
+不需要复制。新增或修改脚本后两端同时生效。
 
 ## 跨端同步
 
