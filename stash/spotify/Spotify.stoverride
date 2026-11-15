@@ -4,6 +4,11 @@
 name: Spotify 解锁
 desc: 解锁 Premium 账号属性、过滤首页全宽推广位
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png'
+author: MaxMaoSu
+category: 去广告
+version: 1.1.0
+date: 2026-11-15
+openUrl: 'https://open.spotify.com/'
 
 rules:
   # 必须用域级宽匹配。regional 主机是 guc3-spclient.spotify.com，

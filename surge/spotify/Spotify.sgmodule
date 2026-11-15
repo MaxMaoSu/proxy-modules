@@ -1,6 +1,9 @@
 #!name=Spotify 解锁
 #!desc=适配 Spotify Nebula 接口，解锁 Premium，过滤屏幕广告位
 #!icon=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png
+#!author=MaxMaoSu
+#!category=去广告
+#!version=1.1.0
 
 [Rule]
 # 必须用注册域宽匹配：regional 主机是 guc3-spclient.spotify.com，
