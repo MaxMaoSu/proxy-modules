@@ -179,4 +179,4 @@ script-providers:
 ## 真实案例
 
 完整拆解见 `references/spotify-case.md`（Spotify 9.1.98，五层问题同时存在）。
-规则仓库：<https://github.com/MaxMaoSu/stash-overrides>。
+规则仓库：<https://github.com/MaxMaoSu/proxy-modules>（`stash/` 与 `surge/` 两套模块，脚本在 `shared/`）。

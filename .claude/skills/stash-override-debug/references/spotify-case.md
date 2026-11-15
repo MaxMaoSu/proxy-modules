@@ -1,6 +1,6 @@
 # 案例：Spotify 9.1.98 解锁
 
-规则本体：<https://github.com/MaxMaoSu/stash-overrides>
+规则本体：<https://github.com/MaxMaoSu/proxy-modules>
 
 ## 症状链
 

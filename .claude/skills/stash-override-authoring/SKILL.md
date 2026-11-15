@@ -17,7 +17,7 @@ description: Use when writing or editing a Stash .stoverride file — adding rou
 #!desc = 一句话说明
 name: 显示名称
 desc: 描述
-icon: 'https://raw.githubusercontent.com/<user>/<repo>/main/<目录>/icon.png'
+icon: 'https://raw.githubusercontent.com/<user>/<repo>/main/shared/<模块>/<模块>.png'
 
 rules:
   - AND,((DOMAIN-SUFFIX,example.com),(PROTOCOL,QUIC)),REJECT-DROP
@@ -46,10 +46,10 @@ script-providers:
 **每个覆写都要有图标**，用 `icon:` 键（不是 `#!icon`），值是 raw URL：
 
 ```yaml
-icon: 'https://raw.githubusercontent.com/<user>/<repo>/main/<目录>/icon.png'
+icon: 'https://raw.githubusercontent.com/<user>/<repo>/main/shared/<模块>/<模块>.png'
 ```
 
-- 图标文件与该覆写的 `.stoverride` 放同一目录，优先用产品官方 logo。
+- 图标文件放 `shared/<模块>/`，Stash 与 Surge 共用，优先用产品官方 logo。
 - 官方 logo 可取 simpleicons（`https://cdn.simpleicons.org/<slug>`，返回 SVG），
   **不要**用 Wikimedia 的 thumb 地址，会返回 HTML 错误页。
 
@@ -165,7 +165,7 @@ $done({ response: { status: 200, headers: { "content-length": "0" }, body: "" } 
 
 ## 发布
 
-个人规则放 public 仓库，一个覆写一个目录（`.stoverride` 与自写脚本放一起），
+个人规则放 public 仓库，按客户端分目录：`stash/<模块>/`、`surge/<模块>/`，脚本与图标放 `shared/<模块>/`，
 README 只列订阅地址，技术细节写进仓库的 CLAUDE.md。改完 push 即生效（首行有
 `#SUBSCRIBED` 时）。
 

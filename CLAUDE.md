@@ -13,10 +13,11 @@ proxy-modules/
 └── surge/<模块>/            <模块>.sgmodule
 ```
 
-新增模块：三个目录各建同名子目录，README 表格加一行。
+新增模块：双端都支持的建 `shared/` + `stash/` + `surge/` 三处；只支持 Stash 的建 `shared/` + `stash/` 两处。README 表格加一行。
 脚本只写 `$request` / `$response` / `$done` 这套通用 API，两端才能共用。
-**每个覆写必须有图标**：`.stoverride` 用 `icon: '<raw URL>'` 指向同目录 PNG
-（512×512、透明底，优先产品官方 logo），不是 `#!icon`。
+**每个模块必须有图标**：图标放 `shared/<模块>/`，Stash 用 `icon: '<raw URL>'`
+（不是 `#!icon`），Surge 用 `#!icon=`，两端指向同一个文件
+（512×512、透明底，优先产品官方 logo）。
 图标必须清晰、居中：SVG 转 PNG 要 `-density 2400` + `-trim` + `-extent`，
 直接 `-resize` 会糊且偏心，完整命令见 skill `stash-override-authoring`。
 换图片内容必须换文件名，Stash 按 URL 缓存图标。
@@ -27,7 +28,7 @@ proxy-modules/
 `.stoverride` 首行写自身 raw 地址：
 
 ```yaml
-#SUBSCRIBED https://raw.githubusercontent.com/MaxMaoSu/stash-overrides/main/<目录>/<文件名>.stoverride
+#SUBSCRIBED https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/stash/<模块>/<文件名>.stoverride
 ```
 
 客户端会把它当订阅源自动更新。**改文件名或路径必须同步改这一行**，
@@ -50,10 +51,13 @@ Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变�
 | 脚本 | `http.script` 的 `match/name/type/timeout` | `[Script]`：`NAME = type=http-request|http-response, pattern="…", …` |
 | 响应体 | `require-body: true` | `requires-body=1` |
 | 二进制 | `binary-mode: true` | `binary-body-mode=1` |
-| 体积上限 | `max-size: 0`（不限） | `max-size=<字节>`，默认 1MB，大响应要显式给足 |
+| 体积上限 | `max-size: 0`（不限） | `max-size=-1`（不限）；正整数表示字节上限，默认 1MB |
 
 脚本直接用 `shared/` 的同一份文件（只依赖 `$request` / `$response` / `$done`），
 不需要复制。新增或修改脚本后两端同时生效。
+
+本机未安装 Surge，`surge/` 下的模块**按官方语法编写但未实机验证**；
+首次在 Surge 里启用时按「配置是否生效 → MITM → 脚本日志」三层各自确认一次。
 
 ## 跨端同步
 
