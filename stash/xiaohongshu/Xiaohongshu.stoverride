@@ -4,6 +4,11 @@
 name: 小红书去广告
 desc: 过滤信息流推广与开屏广告，移除图片、视频水印
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/xiaohongshu/xiaohongshu-icon.png'
+author: MaxMaoSu
+category: 去广告
+version: 1.0.0
+date: 2026-11-15
+openUrl: 'https://www.xiaohongshu.com/'
 
 rules:
   # HTTP/3 完全绕过 MITM，不拦 QUIC 的话所有脚本都不会触发。
