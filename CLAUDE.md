@@ -180,4 +180,4 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
 
 ## 项目技能
 
-`.claude/skills/stash-override-authoring`（写/改覆写）、`.claude/skills/stash-override-debug`（规则或脚本静默失效时排查）。只在本仓库会话加载。
+`.claude/skills/stash-override-authoring`（写/改 Stash 覆写）、`.claude/skills/stash-override-debug`（规则或脚本静默失效时排查）、`.claude/skills/surge-module-authoring`（写/改 Surge 模块、从 Stash 覆写转 Surge）。只在本仓库会话加载。
