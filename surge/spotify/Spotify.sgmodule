@@ -1,9 +1,5 @@
 #!name=Spotify 解锁
 #!desc=适配 Spotify Nebula 接口，解锁 Premium，过滤屏幕广告位
-#!icon=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png
-#!author=MaxMaoSu
-#!category=去广告
-#!version=1.1.0
 
 [Rule]
 # 必须用注册域宽匹配：regional 主机是 guc3-spclient.spotify.com，
@@ -19,17 +15,17 @@ hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com, *-spclient.w
 [Script]
 # 广告链路兜底拦截：拿不到可结构化清理的数据，直接返回空响应。
 # protobuf 端点返回 0 字节 body；JSON 端点返回 {}。脚本内部按 URL 区分。
-spotify-adblock = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:gabo-receiver-service|pam-view-service|sponsoredplaylist|ad-logic/v[0-9]+/config|ads/v[0-9]+/config)", timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adblock-v1.js
+spotify-adblock = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:gabo-receiver-service|pam-view-service|sponsoredplaylist|ad-logic/v[0-9]+/config|ads/v[0-9]+/config)", engine=jsc, timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adblock-v1.js
 
 # 删掉条件请求头，避免 304 无 body 让下游 proto / 首页脚本拿不到数据
-spotify-strip304 = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$", timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-strip304-v2.js
+spotify-strip304 = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$", engine=jsc, timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-strip304-v2.js
 
 # 首页 protobuf：清掉 |brand-ad section
-spotify-home = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/casita/v[0-9]+/home(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, timeout=15, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-home-v1.js
+spotify-home = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/casita/v[0-9]+/home(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=15, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-home-v1.js
 
 # 广告投递：ads/vN/ads（hpto / marquee / preroll）、ad-logic/prefetch、pendragon
 # ad-logic/prefetch 响应超过 64KB，max-size 必须给足
-spotify-adclean = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:ads/v[0-9]+/ads|ad-logic/prefetch|pendragon)(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, timeout=10, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v1.js
+spotify-adclean = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:ads/v[0-9]+/ads|ad-logic/prefetch|pendragon)(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=10, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v1.js
 
 spotify-search = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/browsita/v[0-9]+/browse(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, timeout=10, script-path=https://raw.githubusercontent.com/Reukix/ukix/406b5f63dd461d551f1b03098d374bae5c7b1296/js/Spotify-search.js
 

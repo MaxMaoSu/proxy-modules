@@ -45,13 +45,14 @@ Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变�
 
 | 能力 | Stash | Surge |
 |---|---|---|
-| 元信息 | `#!name =` / `#!desc =` / `icon:` | `#!name=` / `#!desc=` / `#!icon=` / `#!system=` |
+| 元信息 | `#!name =` / `#!desc =` / `icon:` / `author` 等 | `#!name=` / `#!desc=`；`#!icon`/`#!author`/`#!category` **非官方字段**，不写 |
 | 规则 | `rules:` 数组 | `[Rule]` 段，一行一条 |
 | MITM | `http.mitm` 数组 | `[MITM]` 的 `hostname = %APPEND% a, b` |
 | 脚本 | `http.script` 的 `match/name/type/timeout` | `[Script]`：`NAME = type=http-request|http-response, pattern="…", …` |
 | 响应体 | `require-body: true` | `requires-body=1` |
 | 二进制 | `binary-mode: true` | `binary-body-mode=1` |
-| 体积上限 | `max-size: 0`（不限） | `max-size=-1`（不限）；正整数表示字节上限，默认 1MB |
+| 体积上限 | `max-size: 0`（不限） | `max-size=-1`（不限）；默认 iOS 1MB / macOS 10MB |
+| 引擎 | 无对应键 | `engine=jsc` / `engine=webview`；用 WebAPI 的显式写 webview |
 
 脚本直接用 `shared/` 的同一份文件（只依赖 `$request` / `$response` / `$done`），
 不需要复制。新增或修改脚本后两端同时生效。
