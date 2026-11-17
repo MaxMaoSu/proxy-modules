@@ -18,7 +18,7 @@ AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-DROP
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
-spotify-strip304 = type=http-request, pattern="^https://…$", engine=jsc, timeout=5, script-path=https://raw.githubusercontent.com/…/spotify-strip304-v2.js
+my-request-script = type=http-request, pattern="^https://…$", engine=jsc, timeout=5, script-path=https://raw.githubusercontent.com/…/my-request.js
 spotify-adclean = type=http-response, pattern="^https://…$", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=10, script-path=https://raw.githubusercontent.com/…/spotify-adclean-v1.js
 ```
 
@@ -101,6 +101,22 @@ WebView 独立进程，最多 3 个并行，超出排队、排不上按超时算
 - `h2` 默认 `false`，开启后 MITM 走 HTTP/2，并发请求更快。
 - 证书固定的应用在 MITM 后必然断连；握手完成但不发请求时 Surge 会在日志里提示。
 - `server-certificates`（iOS 6.0+ / Mac 6.11+）可给指定主机换用自己的证书。
+
+## 拦截与改写
+
+`[URL Rewrite]` 的模式只有四种：`header`、`302`、`307`、`reject`。
+没有 Stash 的 `reject-200` / `reject-img` / `reject-dict` / `reject-array`，等价物在 `[Map Local]`：
+
+| 想要 | Surge 写法 |
+|---|---|
+| 404 + 空 body | `[URL Rewrite]` + `reject` |
+| 200 + 空 body | `[Map Local] … data-type=text data=""` |
+| 200 + `{}` | `… data-type=text data="{}" header="Content-Type:application/json"` |
+| 200 + `[]` | `… data-type=text data="[]" header="Content-Type:application/json"` |
+| 200 + 1px GIF | `… data-type=tiny-gif` |
+| 200 + 任意文本/二进制 | `data-type=text` / `data-type=base64`，`status-code` 可改 |
+
+`[Map Local]` 只在 Rewrite 功能开启且请求经过 HTTP 引擎时生效，HTTPS 需要目标主机已 MITM。
 
 ## 规则要点
 

@@ -133,7 +133,7 @@ Stash 按 URL 缓存图标，换内容必须换文件名。
 | `http.script` | 脚本挂载：`match` / `name` / `type` / `require-body` / `binary-mode` / `max-size` / `timeout` / `argument` / `engine` |
 | `http.force-http-engine` | 强制走 HTTP 引擎的主机，可带端口 |
 | `script-providers` | 脚本体来源：`url` / `path` / `payload` / `interval` / `headers` |
-| `http.url-rewrite` / `header-rewrite` / `body-rewrite` / `mock` | 官方文档列为配置键，覆写内是否生效见 `verified-vs-docs.md`；先写最小用例验证，不生效就改脚本 |
+| `http.url-rewrite` / `header-rewrite` / `body-rewrite` / `mock` | **Stash 5.0 起在覆写内生效**（已实测）；4.x 静默无效。改请求头、伪造状态码优先用它们，不必写脚本 |
 | `dns.*` / `proxy-groups` / `log-level` / `ipv6` | 可用但少用 |
 
 `http.script` 的 `engine`：`auto`（默认，iOS/macOS 优先 WebKit）、`webkit`、`jsc`。
@@ -200,6 +200,19 @@ $done({ response: { status: 200, headers: { "content-length": "0" }, body: "" } 
 ```
 
 不确定编码时先抓一次真实响应看 `content-type`。
+
+### url-rewrite 的 reject 变体怎么选
+
+| 变体 | 返回 | 用在 |
+|---|---|---|
+| `reject` | 404 + 空 body | 不关心客户端怎么处理；很多 SDK 把非 2xx 当失败，会重试或弹错误 |
+| `reject-200` | 200 + 空 body | 客户端只看状态码；**JSON 接口不能用**，`JSON.parse("")` 直接抛错 |
+| `reject-img` | 200 + 1px GIF | 图片、像素埋点 |
+| `reject-dict` | 200 + `{}` | 客户端要解析 JSON 对象 |
+| `reject-array` | 200 + `[]` | 客户端要解析 JSON 数组 |
+
+选法：先看客户端拿到响应后怎么解析，按解析结果选，不要一律用 `reject`。
+protobuf 接口五种都不适用——`reject-dict` 的 `{}` 会让解码抛异常，只能用脚本回 0 字节 body。
 
 ### 拒绝某个域名
 

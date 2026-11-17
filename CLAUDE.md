@@ -77,22 +77,23 @@ Stash 按 URL 路径缓存脚本，`interval` 未到期不会重新下载。
 改脚本内容时改文件名（如 `xxx-v2.js`）能强制刷新；给 URL 加 `?v=2` **无效**，
 会被规范化掉。
 
-## Stash 覆写的实际能力边界（4.3.5 实测）
+## Stash 覆写的实际能力边界（5.0.0 实测，2026-11-17）
 
 | 键 | 可用 | 说明 |
 |---|---|---|
 | `rules` | ✅ | 数组默认 prepend，覆写规则优先 |
 | `http.mitm` | ✅ | 中缀通配可用，`*spclient.a.com` 能匹配 `guc3-spclient.a.com` |
 | `http.script` | ✅ | 支持 `require-body` / `binary-mode` / `max-size` / `timeout` |
-| `script-providers` | ✅ | **只认 https `url:`**，`path:` 与 http 均不生效 |
-| `url-rewrite` | ❌ | reject / reject-200 / 302 全部无效，静默忽略 |
-| `header-rewrite` | ❌ | request-add 未注入 |
-| `body-rewrite` | ❌ | 同组，推断同样无效 |
-| `mock` | ❌ | 指定 status-code 不生效 |
+| `script-providers` | ✅ | 4.3.5 只认 https `url:`；`path:` / `payload` 待复测 |
+| `url-rewrite` | ✅ | `reject` / `reject-200` / `reject-img` / `reject-dict` 均生效 |
+| `header-rewrite` | ✅ | `request-add` 生效 |
+| `body-rewrite` | ✅ | `response-json-add` 生效 |
+| `mock` | ✅ | `status-code` 与 `text` 生效 |
 
-覆写里要改请求头、伪造响应、拦截请求，**一律写脚本**。
+**4.3.5 时这些 rewrite 段全部静默无效，5.0 已修复**，不必再为改请求头、伪造状态码写脚本。
+改完 iCloud 覆写文件约 8 秒内自动生效，不需要点「重新加载配置」。
 
-上表在 4.3.5 测得，**5.0 未复测**。5.0 新增：`#!append`（覆写追加到配置末尾）、
+5.0 新增：`#!append`（覆写追加到配置末尾）、
 `pre-matching`（REJECT 规则提前到连接建立前，只允许域名/GEOSITE/IP/GEOIP/DST-PORT/SRC-*/NETWORK/RULE-SET
 及其组合，目标只能是 REJECT 族）、安装覆写前填参数、事件脚本、合并结果校验。
 广告类域名优先加 `pre-matching`，iOS 下省内存和 CPU 最直接；
@@ -131,8 +132,8 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
 - **`remote-config-resolver` 不要交给 proto**：桌面版该接口返回 JSON，
   protobuf 解码抛 `invalid wire type`，异常会重置 WebKit 引擎，
   连带让同期 nebula 的脚本跑不掉。
-- **304 无 body**：服务器命中 ETag 返回 304 时脚本拿不到数据，用 request 脚本
-  删 `If-None-Match` / `If-Modified-Since`。只在真删到头时才返回 headers。
+- **304 无 body**：服务器命中 ETag 返回 304 时脚本拿不到数据，用 `header-rewrite` 的
+  `request-del` 删 `If-None-Match` / `If-Modified-Since`（Stash 5.0 起覆写内生效）。
 - **广告位都在 `ads/v3/ads?slots=…`**：`hpto` = 首页顶部全宽卡，
   `marquee` = 播放页歌词下方那张（实测 iPhone「广告 / Chase」卡片），`preroll` = 播前。
   响应形如 `{"pod":{"<slot>":[{id, clickthrough, ...}]}}`。
@@ -146,12 +147,14 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
   kind 有 `shortcuts`、`musicfeed-*` 等）。
 - **iPhone 端脚本缓存**：`provider update` 对手机控制器返回 404 且不刷新；
   改脚本内容要**换文件名**（`xxx-v2.js`）并同步 iCloud，再让手机重载覆写。
-- **广告拦截分两层**：response 阶段（`spotify-adclean-v1.js`）清空
+- **广告拦截分两层**：response 阶段（`spotify-adclean-v1.js`，仍需脚本）清空
   `ads/vN/ads`、`ad-logic/prefetch`、`pendragon` 的数组，保留 JSON 结构；
-  request 阶段（`spotify-adblock-v1.js`）对 `gabo-receiver-service`、
-  `pam-view-service`、`sponsoredplaylist`、`ad-logic/vN/config`、
-  `ads/vN/config` 直接返回空响应。protobuf 端点必须回 0 字节 body，
-  给 `{}` 会让客户端解码抛异常。两层 match 不得重叠。
+  请求阶段改用 `url-rewrite` 的 `reject-200` / `reject-dict` 由引擎直接合成响应，
+  不跑脚本：`sponsoredplaylist`、`ad-logic/vN/config` 是 protobuf 回 0 字节，
+  `gabo-receiver-service`、`pam-view-service`、`ads/vN/config` 是 JSON 回 `{}`。
+  protobuf 给 `{}` 会让客户端解码抛异常。两层 match 不得重叠。
+  adclean 保留脚本是因为它要按 `pod` 下任意键名清数组、还要兼容根数组与 `messages`，
+  jq 写起来更脆。
 - **描述只写实际能力**：已处理屏幕广告位、`ad-logic/prefetch`、`pendragon`
   以及 gabo/pam/sponsored 等投递端点的拦截；`capping-api` 未处理。
   音频广告是否被 Premium 属性完全抑制**未实测**，不要当作已知结论。
@@ -165,15 +168,15 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
 
 ## 小红书专项
 
-移植自 QingRex/LoonKissSurge 的「小红书去广告」Surge 模块，去掉了 Stash 覆写不生效的段落。
+移植自 QingRex/LoonKissSurge 的「小红书去广告」模块。伪造响应与搜索页改写已回归到
+`url-rewrite` / `body-rewrite`，不再需要自写脚本（Stash 5.0 起覆写内生效）。
 
-- **Surge `[Map Local]` → request 脚本**：`xiaohongshu-mock-v1.js` 在请求阶段直接
-  `$done({ response: { status: 200, body } })`。watermark 配置接口必须回 1×1 GIF
-  原始字节（`Content-Type: image/gif`），其余 4 组回 `{}`。返回 Uint8Array 要算准
-  `Content-Length`，否则客户端按长度截断。
-- **Surge `[Body Rewrite]` jq → response 脚本**：`xiaohongshu-search-v1.js` 处理搜索页
-  banner_list / hot_list / hint / trending。trending 一次请求里同时改 `queries` 和
-  `hint_word`，Surge 模块拆成了两条规则。
+- **伪造响应走 `url-rewrite`**：watermark 配置接口用 `reject-img` 回 1×1 GIF
+  （`Content-Type: image/gif`），其余 4 组用 `reject-dict` 回 `{}` + `application/json`。
+  都不跑脚本。Surge 侧对应 `[Map Local]` 的 `data-type=tiny-gif` / `data-type=text data="{}"`。
+- **搜索页推广位走 `body-rewrite`**：banner_list 清 `data`、hot_list 清 `data.items`、
+  hint 清 `data.hint_words`、trending 一次清 `data.queries` 与 `data.hint_word`。
+  `response-json-replace` 只在当前值不是 false/null 时替换，路径缺失不动，与原脚本一致。
 - **主脚本**：RedPaper_remove_ads.js，镜像在 `Repcz/Tool`，锁 commit SHA。
   匹配 12 组端点，覆盖信息流广告、开屏、详情页小部件、图片/视频/实况照片水印。
   MITM 要放开 `ci` / `so` 两个非常用子域，否则 mock 与搜索脚本不触发。

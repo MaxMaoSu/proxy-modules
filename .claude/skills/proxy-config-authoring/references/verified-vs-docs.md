@@ -7,7 +7,8 @@
 
 | 结论 | 版本 / 日期 | 与文档的关系 |
 |---|---|---|
-| 覆写内 `http.url-rewrite` / `header-rewrite` / `body-rewrite` / `mock` 全部静默无效，要改请求头、伪造状态码、拦截请求只能写脚本 | 4.3.5，2026-11-14 | 文档把这几项列为配置键，没说覆写在覆写里不可用。用前先写最小用例复测 |
+| 覆写内 `http.url-rewrite` / `header-rewrite` / `body-rewrite` / `mock` **5.0 全部生效**：`reject-200` / `reject-dict` / `reject-img`、`request-add` / `request-del`、`response-json-add` / `response-json-replace`、`mock` 的 `status-code`+`text` 均实测通过 | 5.0.0，2026-11-17 | 与文档一致。4.3.5 时这些段全部静默无效，已修复 |
+| `reject-dict` 响应带 `content-type: application/json`、2 字节 `{}`；`reject-200` 无 content-type、0 字节；`reject-img` 带 `image/gif`、49 字节 1×1 GIF | 5.0.0，2026-11-17 | 文档只说返回形态，未说响应头，实测可替代等价的手写脚本 |
 | `script-providers` 只认 `url:` 且必须 https，`path:` 不生效 | 4.3.5，2026-11-14 | 文档现已记载 `path` / `payload`，需按当前版本复测 |
 | 首行 `#SUBSCRIBED <自身 raw URL>` 让客户端当订阅源自动更新 | 4.3.5，2026-11-14 | 文档未记载 |
 | 重载只有 App 内一个入口（菜单栏图标 → 重新加载配置）；`⌘R`、重启 App、`stash://reload`、控制器 API 都不重载（`Core/config.yaml` mtime 不变） | 4.3.5，2026-11-14 | 文档未记载 |
@@ -37,7 +38,6 @@
 
 上表 4.3.5 的条目都在 5.0 之前测得，升版本后需重跑最小用例：
 
-- 覆写里的 `url-rewrite` / `header-rewrite` / `body-rewrite` / `mock` 是否已恢复。
 - `script-providers.path` / `payload` 是否可用。
 - `max-size: 0` 的语义。
 - `#!append` 的实际顺序（规则、代理组分别验证）。
