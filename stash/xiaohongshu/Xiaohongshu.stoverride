@@ -6,8 +6,8 @@ desc: 过滤信息流推广与开屏广告，移除图片、视频水印
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/xiaohongshu/xiaohongshu-icon.png'
 author: MaxMaoSu
 category: 去广告
-version: 1.0.0
-date: 2026-11-15
+version: 1.1.0
+date: 2026-11-17
 openUrl: 'https://www.xiaohongshu.com/'
 
 rules:
@@ -22,36 +22,23 @@ http:
     - rec.xiaohongshu.com
     - so.xiaohongshu.com
     - www.xiaohongshu.com
+  # ── 伪造响应：由引擎直接回，不跑脚本 ──
+  # 水印配置图必须是 1×1 GIF；其余是给客户端的空 JSON 结构。
+  url-rewrite:
+    - '^https:\/\/ci\.xiaohongshu\.com\/system_config\/watermark - reject-img'
+    - '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/surprisebox\/(?:get_style|open|submit_action) - reject-dict'
+    - '^https:\/\/www\.xiaohongshu\.com\/api\/marketing\/box\/trigger\? - reject-dict'
+    - '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/(?:v2\/guide\/user_banner|v3\/note\/guide) - reject-dict'
+    - '^https:\/\/www\.xiaohongshu\.com\/api\/sns\/(?:v1\/ads\/resource|v2\/hey\/\w+\/hey_gallery) - reject-dict'
+  # ── 搜索页推广位：引擎内改 JSON，不再整段解析再序列化 ──
+  # json-replace 只在当前值不是 false/null 时替换，路径缺失时不动，与脚本行为一致。
+  body-rewrite:
+    - '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/search\/banner_list$ response-json-replace data {}'
+    - '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/search\/hot_list$ response-json-replace data.items []'
+    - '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v4\/search\/hint response-json-replace data.hint_words []'
+    - '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v4\/search\/trending response-json-replace data.queries [] data.hint_word {}'
+
   script:
-    # ── 伪造响应：替代 Surge 模块的 [Map Local] ──
-    - match: '^https:\/\/ci\.xiaohongshu\.com\/system_config\/watermark'
-      name: xiaohongshu-mock
-      type: request
-      timeout: 5
-    - match: '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/surprisebox\/(?:get_style|open|submit_action)'
-      name: xiaohongshu-mock
-      type: request
-      timeout: 5
-    - match: '^https:\/\/www\.xiaohongshu\.com\/api\/marketing\/box\/trigger\?'
-      name: xiaohongshu-mock
-      type: request
-      timeout: 5
-    - match: '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/(?:v2\/guide\/user_banner|v3\/note\/guide)'
-      name: xiaohongshu-mock
-      type: request
-      timeout: 5
-    - match: '^https:\/\/www\.xiaohongshu\.com\/api\/sns\/(?:v1\/ads\/resource|v2\/hey\/\w+\/hey_gallery)'
-      name: xiaohongshu-mock
-      type: request
-      timeout: 5
-
-    # ── 搜索页推广位：替代 Surge 模块的 [Body Rewrite] jq 规则 ──
-    - match: '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/(?:v1\/search\/(?:banner_list|hot_list)|v4\/search\/(?:hint|trending))'
-      name: xiaohongshu-search
-      type: response
-      require-body: true
-      timeout: 10
-
     # ── RedPaper：去广告 + 去水印主脚本 ──
     - match: '^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/note\/(?:imagefeed|live_photo\/save)'
       name: redpaper
@@ -114,15 +101,7 @@ http:
       require-body: true
       timeout: 15
 
-# 没有 url-rewrite / body-rewrite / mock 段：实测在覆写里不生效（见仓库 CLAUDE.md），
-# 伪造响应与 body 改写全部走脚本。
 script-providers:
-  xiaohongshu-mock:
-    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/xiaohongshu/xiaohongshu-mock-v1.js
-    interval: 86400
-  xiaohongshu-search:
-    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/xiaohongshu/xiaohongshu-search-v1.js
-    interval: 86400
   # RedPaper_remove_ads.js 锁定 Repcz/Tool 的 commit，避免上游改动导致行为漂移
   redpaper:
     url: https://raw.githubusercontent.com/Repcz/Tool/dab2af5b1c4846332fb99cea0586e8ec7a5a2068/Loon/Script/RedPaper/RedPaper_remove_ads.js
