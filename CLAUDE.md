@@ -19,7 +19,7 @@ proxy-modules/
 （不是 `#!icon`），Surge 用 `#!icon=`，两端指向同一个文件
 （512×512、透明底，优先产品官方 logo）。
 图标必须清晰、居中：SVG 转 PNG 要 `-density 2400` + `-trim` + `-extent`，
-直接 `-resize` 会糊且偏心，完整命令见 skill `stash-override-authoring`。
+直接 `-resize` 会糊且偏心，完整命令见 skill `proxy-config-authoring`。
 换图片内容必须换文件名，Stash 按 URL 缓存图标。
 第三方脚本用远程 URL，不复制进仓库。
 
@@ -51,11 +51,14 @@ Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变�
 | 脚本 | `http.script` 的 `match/name/type/timeout` | `[Script]`：`NAME = type=http-request|http-response, pattern="…", …` |
 | 响应体 | `require-body: true` | `requires-body=1` |
 | 二进制 | `binary-mode: true` | `binary-body-mode=1` |
-| 体积上限 | `max-size: 0`（不限） | `max-size=-1`（不限）；默认 iOS 1MB / macOS 10MB |
-| 引擎 | 无对应键 | `engine=jsc` / `engine=webview`；用 WebAPI 的显式写 webview |
+| 体积上限 | `max-size`（字节；实测 `0` 为不限） | `max-size=-1`（不限）；默认 iOS 1MB / macOS 10MB |
+| 引擎 | `engine: auto\|webkit\|jsc` | `engine=auto\|jsc\|webview`；用 WebAPI 的显式写 webview |
 
 脚本直接用 `shared/` 的同一份文件（只依赖 `$request` / `$response` / `$done`），
 不需要复制。新增或修改脚本后两端同时生效。
+
+Surge 的 `auto-quic-block` 默认开启（iOS 5.8+ / Mac 5.4+），命中 MITM 列表的 QUIC 连接会被自动阻断，
+所以 Surge 模块里不必再为 MITM 域名单独写 QUIC 拦截规则；Stash 没有这个能力，必须显式写规则。
 
 本机未安装 Surge，`surge/` 下的模块**按官方语法编写但未实机验证**；
 首次在 Surge 里启用时按「配置是否生效 → MITM → 脚本日志」三层各自确认一次。
@@ -88,6 +91,13 @@ Stash 按 URL 路径缓存脚本，`interval` 未到期不会重新下载。
 | `mock` | ❌ | 指定 status-code 不生效 |
 
 覆写里要改请求头、伪造响应、拦截请求，**一律写脚本**。
+
+上表在 4.3.5 测得，**5.0 未复测**。5.0 新增：`#!append`（覆写追加到配置末尾）、
+`pre-matching`（REJECT 规则提前到连接建立前，只允许域名/GEOSITE/IP/GEOIP/DST-PORT/SRC-*/NETWORK/RULE-SET
+及其组合，目标只能是 REJECT 族）、安装覆写前填参数、事件脚本、合并结果校验。
+广告类域名优先加 `pre-matching`，iOS 下省内存和 CPU 最直接；
+已在 `DOMAIN,aet.spotify.com,REJECT,pre-matching`（Stash 与 Surge 两版）落地并实机确认。
+官方 wiki 落后于版本，新特性看 `https://releases.stash.ws/appcast.xml`。
 
 ## 排查顺序
 
@@ -181,4 +191,6 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
 
 ## 项目技能
 
-`.claude/skills/stash-override-authoring`（写/改 Stash 覆写）、`.claude/skills/stash-override-debug`（规则或脚本静默失效时排查）、`.claude/skills/surge-module-authoring`（写/改 Surge 模块、从 Stash 覆写转 Surge）。只在本仓库会话加载。
+`.claude/skills/proxy-config-authoring`（写/改 Stash 覆写与 Surge 模块，每次动手前先跑
+`scripts/check-docs.sh` 核对官方文档）、`.claude/skills/stash-override-debug`（规则或脚本静默失效时排查）。
+只在本仓库会话加载。
