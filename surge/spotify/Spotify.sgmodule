@@ -13,14 +13,18 @@ DOMAIN,aet.spotify.com,REJECT,pre-matching
 [MITM]
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com, *-spclient.wg.spotify.com
 
+[Map Local]
+# 广告链路兜底拦截，不跑脚本。响应形态要和客户端解码方式一致：
+# protobuf 端点给 0 字节（空 message），JSON 端点给 {} + application/json，弄反会抛解码异常。
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:sponsoredplaylist|ad-logic/v[0-9]+/config) data-type=text data=""
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:gabo-receiver-service|pam-view-service|ads/v[0-9]+/config) data-type=text data="{}" header="Content-Type:application/json"
+
+[Header Rewrite]
+# 删掉条件请求头，避免服务器回 304 无 body 让下游 proto / 首页脚本拿不到数据
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$ request-del If-None-Match
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$ request-del If-Modified-Since
+
 [Script]
-# 广告链路兜底拦截：拿不到可结构化清理的数据，直接返回空响应。
-# protobuf 端点返回 0 字节 body；JSON 端点返回 {}。脚本内部按 URL 区分。
-spotify-adblock = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:gabo-receiver-service|pam-view-service|sponsoredplaylist|ad-logic/v[0-9]+/config|ads/v[0-9]+/config)", engine=jsc, timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adblock-v1.js
-
-# 删掉条件请求头，避免 304 无 body 让下游 proto / 首页脚本拿不到数据
-spotify-strip304 = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$", engine=jsc, timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-strip304-v2.js
-
 # 首页 protobuf：清掉 |brand-ad section
 spotify-home = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/casita/v[0-9]+/home(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=15, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-home-v1.js
 

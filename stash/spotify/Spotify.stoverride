@@ -6,7 +6,7 @@ desc: 解锁 Premium 账号属性、过滤首页全宽推广位
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png'
 author: MaxMaoSu
 category: 去广告
-version: 1.1.1
+version: 1.2.0
 date: 2026-11-17
 openUrl: 'https://open.spotify.com/'
 
@@ -30,22 +30,21 @@ http:
     - 'spclient.wg.spotify.com'
     - '*spclient.spotify.com'
     - '*-spclient.wg.spotify.com'
+  # 广告链路兜底拦截：由引擎直接合成响应，不跑脚本。
+  # 覆盖 gabo（音频广告投递/曝光）、pam-view-service（全屏推广页）、
+  # sponsoredplaylist（播放页卡片）、ad-logic/config、ads/config。
+  # reject-200 回 200 + 0 字节；reject-dict 回 200 + {} + application/json。
+  # 响应形态要和客户端解码方式一致：protobuf 给 0 字节，JSON 给 {}，弄反会抛解码异常。
+  url-rewrite:
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:sponsoredplaylist|ad-logic\/v[0-9]+\/config) - reject-200'
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:gabo-receiver-service|pam-view-service|ads\/v[0-9]+\/config) - reject-dict'
+  # 删掉条件请求头。服务器命中 ETag 会返回 304，而 304 没有响应体，
+  # spotify-proto 拿到空 body 只能 passthrough，账号属性永远改不掉。
+  # casita 首页也带上：命中 ETag 回 304 时没有 body，首页脚本拿不到数据只能放行。
+  header-rewrite:
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:nebula\/v1\/configuration\/attributes|bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize|casita\/v[0-9]+\/home(?:\/[^?]*)?)\/?(?:\?.*)?$ request-del If-None-Match'
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:nebula\/v1\/configuration\/attributes|bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize|casita\/v[0-9]+\/home(?:\/[^?]*)?)\/?(?:\?.*)?$ request-del If-Modified-Since'
   script:
-    # 广告链路兜底拦截：这些端点拿不到可结构化清理的数据，直接返回空 JSON 200。
-    # 覆盖 gabo（音频广告投递/曝光）、pam-view-service（全屏推广页）、
-    # sponsoredplaylist（播放页卡片，protobuf）、ad-logic/config（protobuf）、ads/config（JSON）。
-    - match: '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:gabo-receiver-service|pam-view-service|sponsoredplaylist|ad-logic\/v[0-9]+\/config|ads\/v[0-9]+\/config)'
-      name: spotify-adblock
-      type: request
-      timeout: 5
-    # 第一步：删掉条件请求头。服务器命中 ETag 会返回 304，而 304 没有响应体，
-    # spotify-proto 拿到空 body 只能 passthrough，账号属性永远改不掉。
-    # Stash 没有 header-rewrite 键，只能用 request 脚本改 $request.headers。
-    # casita 首页也带上：命中 ETag 回 304 时没有 body，首页脚本拿不到数据只能放行。
-    - match: '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:nebula\/v1\/configuration\/attributes|bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize|casita\/v[0-9]+\/home(?:\/[^?]*)?)\/?(?:\?.*)?$'
-      name: spotify-strip304
-      type: request
-      timeout: 5
     # 自写脚本，先记录 status / content-type / body 类型，再决定按 protobuf 还是 JSON 过滤。
     # 判定依据是 script-logs/spotify-home.log 里的 "removed=" 与 "error"。
     # max-size: 0 必须给，响应体被截断会让 protobuf 解析直接抛 truncated field。
@@ -96,22 +95,10 @@ http:
       name: spotify-json
       type: request
       timeout: 10
-# 注意：这里没有 url-rewrite / header-rewrite / mock 段。
-# 实测 Stash 4.3.5（macOS）在**已被 MITM 的域名**上，这三组键全部不生效：
-#   - url-rewrite 的 reject / reject-200 / 302 对 gabo-receiver-service 无效
-#   - mock 指定 status-code 599 对 nebula 无效（仍返回 401）
-#   - header-rewrite 的 request-add 未注入
-# 对照组：同一文件里的 http.mitm 与 http.script 均正常工作，重载也确实生效。
-# 因此官方文档里那套 rewrite 语法只能写在主配置，覆写里用不了；
-# 要改请求 / 去请求头只能走脚本（见 spotify-strip304-v2.js）。
-
 # Reukix 的四个脚本锁定到 commit，避免上游改动导致行为漂移。
-# strip304 走本仓库 main；json 锁定到 app2smile 的 commit。改动后需等 interval 到期或重载。
+# json 锁定到 app2smile 的 commit。改动后需等 interval 到期或重载。
 # 升级方式：改 SHA → 重载 → 确认 script-logs 尾部时间戳更新且无 passthrough / timed out。
 script-providers:
-  spotify-strip304:
-    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-strip304-v2.js
-    interval: 86400
   spotify-home:
     url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-home-v1.js
     interval: 86400
@@ -126,9 +113,6 @@ script-providers:
     interval: 86400
   spotify-json:
     url: https://raw.githubusercontent.com/app2smile/rules/df6366a7024e0b3f0aa3510c5b791eea6f3cba89/js/spotify-json.js
-    interval: 86400
-  spotify-adblock:
-    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adblock-v1.js
     interval: 86400
   spotify-adclean:
     url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v1.js
