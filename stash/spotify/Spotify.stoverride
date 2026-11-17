@@ -6,8 +6,8 @@ desc: 解锁 Premium 账号属性、过滤首页全宽推广位
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png'
 author: MaxMaoSu
 category: 去广告
-version: 1.1.0
-date: 2026-11-15
+version: 1.1.1
+date: 2026-11-17
 openUrl: 'https://open.spotify.com/'
 
 rules:
@@ -17,8 +17,10 @@ rules:
   # 音频 CDN 在 scdn.co / akamaized.net / spotifycdn.com，不以 spotify.com 结尾，
   # 这条规则碰不到它们。
   - AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-DROP
-  # 遥测/网络探测端点：REJECT 即可，REJECT-DROP 直接断连会让客户端反复重试
-  - DOMAIN,aet.spotify.com,REJECT
+  # 遥测/网络探测端点：REJECT 即可，REJECT-DROP 直接断连会让客户端反复重试。
+  # pre-matching（Stash 5.0）：DNS 阶段直接返回空应答，连接不会发起；
+  # 目标必须是 REJECT / REJECT-DROP，带 PROTOCOL 的组合规则不适用。
+  - DOMAIN,aet.spotify.com,REJECT,pre-matching
 
 http:
   mitm:

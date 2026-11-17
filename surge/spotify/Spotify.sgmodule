@@ -6,8 +6,9 @@
 # DOMAIN-SUFFIX,spclient.spotify.com 因标签边界（- 不是 .）匹配不到它。
 # QUIC 一旦漏掉就完全绕过 MITM。音频 CDN 不以 spotify.com 结尾，碰不到。
 AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-DROP
-# 遥测/网络探测端点：REJECT 即可，REJECT-DROP 会被客户端反复重试
-DOMAIN,aet.spotify.com,REJECT
+# 遥测/网络探测端点：REJECT 即可，REJECT-DROP 会被客户端反复重试。
+# pre-matching：DNS 阶段直接返回 No Record，连接不会发起；目标必须是 REJECT 族。
+DOMAIN,aet.spotify.com,REJECT,pre-matching
 
 [MITM]
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com, *-spclient.wg.spotify.com
