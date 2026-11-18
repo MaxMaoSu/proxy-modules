@@ -12,7 +12,7 @@
 // 任何解析失败或结构不认识都原样放行，并把原因写进日志。
 
 (() => {
-  const TAG = "pathfinder v2";
+  const TAG = "pathfinder v3";
   // 不用裸 /Ad/：HomeFeedAddSectionData、HomeFeedAdaptiveSectionData 会被误伤。
   const AD_TYPENAME = /Ads?(?:Section|Slot|Break|Element|Card|Unit|Impression)/;
   const AD_URI = /\|(brand-ad|sponsored|canvas)$/i;
@@ -48,11 +48,13 @@
 
   let out = null;
   let note = "";
+  let raw = null;
   try {
     if ($response.status !== undefined && Number($response.status) !== 200) {
       note = "status " + $response.status + ", passthrough";
     } else {
-      const data = JSON.parse(toText($response.body));
+      raw = toText($response.body);
+      const data = JSON.parse(raw);
       const removed = [];
       const op = ($request.url.match(/[?&]operationName=([^&]+)/) || [])[1] || "-";
       const home = data && data.data && data.data.home;
@@ -74,7 +76,11 @@
         " removed=" + removed.length + (removed.length ? " " + removed.slice(0, 5).join(",") : "");
     }
   } catch (e) {
-    note = "error " + (e && e.message ? e.message : String(e));
+    const len = raw ? raw.length : -1;
+    const head = raw ? raw.slice(0, 60).replace(/\s+/g, " ") : "";
+    const tail = raw ? raw.slice(-40).replace(/\s+/g, " ") : "";
+    note = "error " + (e && e.message ? e.message : String(e)) +
+      " len=" + len + " head=" + head + " tail=" + tail;
   }
 
   console.log(TAG + " " + note + " url=" + String(($request && $request.url) || ""));

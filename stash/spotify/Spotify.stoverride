@@ -133,5 +133,5 @@ script-providers:
     url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v1.js
     interval: 86400
   spotify-pathfinder:
-    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-pathfinder-v2.js
+    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-pathfinder-v3.js
     interval: 86400
