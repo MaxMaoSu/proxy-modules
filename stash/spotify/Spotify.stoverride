@@ -48,13 +48,14 @@ http:
   script:
     # 自写脚本，先记录 status / content-type / body 类型，再决定按 protobuf 还是 JSON 过滤。
     # 判定依据是 script-logs/spotify-home.log 里的 "removed=" 与 "error"。
-    # max-size: 0 必须给，响应体被截断会让 protobuf 解析直接抛 truncated field。
+    # max-size 必须给足：实测 Stash 5.0 下 0 并不等于不限，>64KB 会被截断，
+    # protobuf 解析直接抛 truncated field。这里用 16MB。
     - match: '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/casita\/v[0-9]+\/home(?:\/[^?]*)?(?:\?.*)?$'
       name: spotify-home
       type: response
       require-body: true
       binary-mode: true
-      max-size: 0
+      max-size: 16777216
       timeout: 15
     # 广告投递：ads/vN/ads（首页 hpto 等屏幕广告位）、ad-logic/prefetch、
     # pendragon 消息，都是 JSON 且广告素材放在数组里。清空数组、保留结构。
@@ -64,8 +65,8 @@ http:
       type: response
       require-body: true
       binary-mode: true
-      # ad-logic/prefetch 的响应超过 64KB，默认 max-size 会截断，JSON 解析直接失败
-      max-size: 0
+      # ad-logic/prefetch 超过 64KB；实测 0 仍截断（Unterminated string），给 16MB
+      max-size: 16777216
       timeout: 10
     # browse / scroll 保留尾部可选路径与查询串，别把 $ 卡死在 /browse 上
     - match: '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/browsita\/v[0-9]+\/browse(?:\/[^?]*)?(?:\?.*)?$'
@@ -90,7 +91,7 @@ http:
       type: response
       require-body: true
       binary-mode: true
-      max-size: 0
+      max-size: 16777216
       timeout: 30
     - match: '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:artistview\/v1\/artist|album-entity-view\/v2\/album)\/'
       name: spotify-json
