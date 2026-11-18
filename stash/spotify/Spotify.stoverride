@@ -24,8 +24,8 @@ rules:
 
 http:
   mitm:
-    # 只解密 spclient 系主机。用 *.spotify.com 会把 api/login5/apresolve 等
-    # 无关域名一起解密，既增加开销又可能影响其它功能。
+    # 只解密 spclient 系主机 + 桌面版 GraphQL（api-partner）。用 *.spotify.com 会把
+    # api/login5/apresolve 等无关域名一起解密，既增加开销又可能影响其它功能。
     # 三个模式都保留：*.wg 与 *-spclient.wg 是不同标签深度。
     - 'spclient.wg.spotify.com'
     - '*spclient.spotify.com'
@@ -98,8 +98,9 @@ http:
       name: spotify-json
       type: request
       timeout: 10
-    # 桌面版首页 GraphQL：删掉全宽画布版块、广告 section 与 |brand-ad / |sponsored 结尾的 section。
-    # 判定信号与 SpotX 的 sectionBlock 一致（HomeFeedBaselineSectionData、Ad 前缀的 __typename）。
+    # 桌面版首页 GraphQL：删掉全宽画布版块与广告 section。
+    # 只有 HomeFeedBaselineSectionData 与 SpotX sectionBlock 一致；
+    # Ad 类型名与 |sponsored / |canvas 后缀是本仓库启发式，待真实响应验证。
     - match: '^https:\/\/api-partner\.spotify\.com(?::443)?\/pathfinder\/'
       name: spotify-pathfinder
       type: response
