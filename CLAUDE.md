@@ -151,10 +151,17 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
   `ads/vN/ads`、`ad-logic/prefetch`、`pendragon` 的数组，保留 JSON 结构；
   请求阶段改用 `url-rewrite` 的 `reject-200` / `reject-dict` 由引擎直接合成响应，
   不跑脚本：`sponsoredplaylist`、`ad-logic/vN/config` 是 protobuf 回 0 字节，
-  `gabo-receiver-service`、`pam-view-service`、`ads/vN/config` 是 JSON 回 `{}`。
+  `gabo-receiver-service`、`pam-view-service` 是 JSON 回 `{}`。
+  **`ads/vN/config` 不能拦**：实测回 `{}` 后桌面版首页直接报「出错了」，首页依赖它渲染。
   protobuf 给 `{}` 会让客户端解码抛异常。两层 match 不得重叠。
   adclean 保留脚本是因为它要按 `pod` 下任意键名清数组、还要兼容根数组与 `messages`，
   jq 写起来更脆。
+- **实现基准**：改 Spotify 模块前先看 `SpotX-Official/SpotX` 与
+  `SideloadLabs/EeveeSpotifyReincarnated` 的最新实现，接口、路径、字段名以它们为准。
+- **pathfinder 方案不适用当前桌面版**：SpotX 靠拦截 `api-partner.spotify.com/pathfinder`
+  删首页 ad-like section。实测本机桌面版点击首页不产生新的 pathfinder 请求
+  （日志只有 `home=-1 content=-1` 的其它查询），该脚本永远不会命中，
+  且给最繁忙的 GraphQL 主机加 MITM 无收益，已移除。
 - **描述只写实际能力**：已处理屏幕广告位、`ad-logic/prefetch`、`pendragon`
   以及 gabo/pam/sponsored 等投递端点的拦截；`capping-api` 未处理。
   音频广告是否被 Premium 属性完全抑制**未实测**，不要当作已知结论。
