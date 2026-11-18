@@ -24,7 +24,7 @@ rules:
 
 http:
   mitm:
-    # 只解密 spclient 系主机 + 桌面版 GraphQL（api-partner）。用 *.spotify.com 会把
+    # 只解密 spclient 系主机。用 *.spotify.com 会把
     # api/login5/apresolve 等无关域名一起解密，既增加开销又可能影响其它功能。
     # 三个模式都保留：*.wg 与 *-spclient.wg 是不同标签深度。
     - 'spclient.wg.spotify.com'
