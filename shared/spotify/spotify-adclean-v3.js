@@ -9,10 +9,11 @@
 //
 // 其它广告端点由 spotify-adblock 在 request 阶段返回空响应：
 //   gabo-receiver-service、pam-view-service、sponsoredplaylist、
-//   ad-logic/vN/config（protobuf）、ads/vN/config
+//   ad-logic/vN/config（protobuf）
+// ads/vN/config 不拦：实测回 {} 会让桌面版首页报「出错了」。
 // capping-api 属于频次控制，拦了去不掉广告，不处理。
 //
-// 任何解析失败都原样放行，并把原因写进 script-logs/spotify-adclean.log。
+// prefetch 解析失败回空 stream；其余解析失败原样放行，原因写进 script-logs/spotify-adclean.log。
 
 (() => {
   const TAG = "adclean v3";
@@ -82,7 +83,7 @@
     // 直接回一个空 stream，等于这一轮没有可投的广告。
     if (url.indexOf("ad-logic/prefetch") >= 0) {
       out = { body: '{"pod":{"stream":[]}}' };
-      note = "prefetch forced empty pod";
+      note = "prefetch forced empty pod len=" + (raw ? raw.length : -1);
     } else {
       const head = raw ? raw.slice(0, 120).replace(/[\x00-\x1f]/g, ".") : "";
       note = "error " + (e && e.message ? e.message : String(e)) +
