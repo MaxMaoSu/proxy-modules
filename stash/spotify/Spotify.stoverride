@@ -106,7 +106,9 @@ http:
       type: response
       require-body: true
       binary-mode: true
-      max-size: 0
+      # 首页 JSON 常超过 64KB，实测 max-size: 0 仍会被截断（日志报
+      # JSON Parse error: Unterminated string），这里显式给 16MB
+      max-size: 16777216
       timeout: 10
 # Reukix 的四个脚本锁定到 commit，避免上游改动导致行为漂移。
 # json 锁定到 app2smile 的 commit。改动后需等 interval 到期或重载。
@@ -131,5 +133,5 @@ script-providers:
     url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v1.js
     interval: 86400
   spotify-pathfinder:
-    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-pathfinder-v1.js
+    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-pathfinder-v2.js
     interval: 86400

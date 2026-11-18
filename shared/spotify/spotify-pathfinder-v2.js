@@ -54,6 +54,7 @@
     } else {
       const data = JSON.parse(toText($response.body));
       const removed = [];
+      const op = ($request.url.match(/[?&]operationName=([^&]+)/) || [])[1] || "-";
       const home = data && data.data && data.data.home;
       const sections = home && home.sectionContainer && home.sectionContainer.sections;
       if (sections && Array.isArray(sections.items)) {
@@ -67,7 +68,10 @@
       if (content && Array.isArray(content.items)) filterList(content.items, removed);
 
       if (removed.length) out = { body: JSON.stringify(data) };
-      note = "removed=" + removed.length + (removed.length ? " " + removed.slice(0, 5).join(",") : "");
+      const homeItems = sections && sections.items ? sections.items.length : -1;
+      const contentItems = content && content.items ? content.items.length : -1;
+      note = "op=" + op + " home=" + homeItems + " content=" + contentItems +
+        " removed=" + removed.length + (removed.length ? " " + removed.slice(0, 5).join(",") : "");
     }
   } catch (e) {
     note = "error " + (e && e.message ? e.message : String(e));
