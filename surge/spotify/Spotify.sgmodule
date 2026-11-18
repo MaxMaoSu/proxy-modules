@@ -31,7 +31,7 @@ spotify-home = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient
 
 # 广告投递：ads/vN/ads（hpto / marquee / preroll）、ad-logic/prefetch、pendragon
 # ad-logic/prefetch 响应超过 64KB，max-size 必须给足
-spotify-adclean = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:ads/v[0-9]+/ads|ad-logic/prefetch|pendragon)(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=10, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v1.js
+spotify-adclean = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:ads/v[0-9]+/ads|ad-logic/prefetch|pendragon)(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=10, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v2.js
 
 spotify-search = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/browsita/v[0-9]+/browse(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, timeout=10, script-path=https://raw.githubusercontent.com/Reukix/ukix/406b5f63dd461d551f1b03098d374bae5c7b1296/js/Spotify-search.js
 

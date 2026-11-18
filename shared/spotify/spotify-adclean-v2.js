@@ -15,7 +15,7 @@
 // 任何解析失败都原样放行，并把原因写进 script-logs/spotify-adclean.log。
 
 (() => {
-  const TAG = "adclean v1";
+  const TAG = "adclean v2";
 
   function toText(body) {
     if (typeof body === "string") return body;
@@ -43,6 +43,7 @@
   }
 
   const url = $request.url || "";
+  let raw = "";
   const status = $response.status;
   let out = null;
   let note = "";
@@ -51,7 +52,8 @@
     if (status !== undefined && Number(status) !== 200) {
       note = "status " + status + ", passthrough";
     } else {
-      const data = JSON.parse(toText($response.body));
+      raw = toText($response.body);
+      const data = JSON.parse(raw);
       const detail = [];
       let removed = 0;
 
@@ -75,7 +77,9 @@
       if (removed) out = { body: JSON.stringify(data) };
     }
   } catch (e) {
-    note = "error " + (e && e.message ? e.message : String(e));
+    const head = raw ? raw.slice(0, 120).replace(/[\x00-\x1f]/g, ".") : "";
+    note = "error " + (e && e.message ? e.message : String(e)) +
+      " len=" + (raw ? raw.length : -1) + " head=" + head;
   }
 
   console.log(TAG + " " + note + " url=" + url);
