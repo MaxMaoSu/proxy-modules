@@ -50,7 +50,7 @@ description: Use when writing or editing a Stash .stoverride or a Surge .sgmodul
 | 脚本 | `http.script` 的 `match` / `name` / `type` | `NAME = type=http-request\|http-response, pattern="…"` |
 | 响应体 | `require-body: true` | `requires-body=1` |
 | 二进制 | `binary-mode: true` | `binary-body-mode=1` |
-| 体积上限 | `max-size`（字节） | `max-size=-1` 不限；默认 iOS 1MB / macOS 10MB |
+| 体积上限 | `max-size`（字节）。**5.0 实测 `0` 不等于不限**，大响应仍被截在 ~64KB，写显式字节数 | `max-size=-1` 不限；默认 iOS 1MB / macOS 10MB |
 | 引擎 | `engine: auto\|webkit\|jsc` | `engine=auto\|jsc\|webview` |
 | 脚本刷新 | `script-providers` + `interval` | `script-path` 直接写 URL + `script-update-interval` |
 | 参数化 | `arguments-version` + `${args.x}` | `#!arguments` + `{{{x}}}` |
@@ -69,6 +69,10 @@ description: Use when writing or editing a Stash .stoverride or a Surge .sgmodul
 - 逻辑规则最多嵌套 10 层；`FINAL` 不能作子规则。
 - `REJECT` 立即返回错误，`REJECT-DROP` 静默丢包；普通拦截用 `REJECT`，
   压高频重试才用 `REJECT-DROP`。
+- 伪造响应前先确认该接口是否被页面渲染依赖：配置类接口（如广告位 config）回空会
+  直接打垮页面（实测桌面版首页报「出错了」）。
+- 响应超过 ~64KB 且无法完整解析时，可按已知头部结构合成空响应
+  （如 `{"pod":{"stream":[]}}`），比放行更有效。
 
 ## 写完必须验证
 
