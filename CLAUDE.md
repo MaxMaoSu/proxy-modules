@@ -156,6 +156,11 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
   protobuf 给 `{}` 会让客户端解码抛异常。两层 match 不得重叠。
   adclean 保留脚本是因为它要按 `pod` 下任意键名清数组、还要兼容根数组与 `messages`，
   jq 写起来更脆。
+- **`ad-logic/prefetch` 固定超过 64KB 且不可解析**：实测 `len=65532~65536`，
+  `max-size` 设到 16MB 也一样被截断，完整 JSON 永远拿不到；头部形如
+  `{"pod":{"stream":[{"clickthrough":"https://adclick.g.doubleclick.net/..."}]}}`，
+  即音频/视频广告 pod。脚本在解析失败时直接回 `{"pod":{"stream":[]}}`。
+- **`max-size: 0` 不要当"不限"**：5.0 实测大响应仍被截断在 64KB，一律写显式字节数（16MB）。
 - **实现基准**：改 Spotify 模块前先看 `SpotX-Official/SpotX` 与
   `SideloadLabs/EeveeSpotifyReincarnated` 的最新实现，接口、路径、字段名以它们为准。
 - **pathfinder 方案不适用当前桌面版**：SpotX 靠拦截 `api-partner.spotify.com/pathfinder`
