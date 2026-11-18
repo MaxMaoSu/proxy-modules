@@ -6,8 +6,8 @@ desc: 解锁 Premium 账号属性、过滤首页全宽推广位
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png'
 author: MaxMaoSu
 category: 去广告
-version: 1.2.0
-date: 2026-11-17
+version: 1.3.0
+date: 2026-11-18
 openUrl: 'https://open.spotify.com/'
 
 rules:
@@ -30,6 +30,9 @@ http:
     - 'spclient.wg.spotify.com'
     - '*spclient.spotify.com'
     - '*-spclient.wg.spotify.com'
+    # 桌面版首页/推荐走 GraphQL（pathfinder），ad-like section 与全宽画布版块
+    # 都在这个 JSON 里，不在 ads 接口上。
+    - 'api-partner.spotify.com'
   # 广告链路兜底拦截：由引擎直接合成响应，不跑脚本。
   # 覆盖 gabo（音频广告投递/曝光）、pam-view-service（全屏推广页）、
   # sponsoredplaylist（播放页卡片）、ad-logic/config、ads/config。
@@ -95,6 +98,15 @@ http:
       name: spotify-json
       type: request
       timeout: 10
+    # 桌面版首页 GraphQL：删掉全宽画布版块、广告 section 与 |brand-ad / |sponsored 结尾的 section。
+    # 判定信号与 SpotX 的 sectionBlock 一致（HomeFeedBaselineSectionData、Ad 前缀的 __typename）。
+    - match: '^https:\/\/api-partner\.spotify\.com(?::443)?\/pathfinder\/'
+      name: spotify-pathfinder
+      type: response
+      require-body: true
+      binary-mode: true
+      max-size: 0
+      timeout: 10
 # Reukix 的四个脚本锁定到 commit，避免上游改动导致行为漂移。
 # json 锁定到 app2smile 的 commit。改动后需等 interval 到期或重载。
 # 升级方式：改 SHA → 重载 → 确认 script-logs 尾部时间戳更新且无 passthrough / timed out。
@@ -116,4 +128,7 @@ script-providers:
     interval: 86400
   spotify-adclean:
     url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v1.js
+    interval: 86400
+  spotify-pathfinder:
+    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-pathfinder-v1.js
     interval: 86400

@@ -11,7 +11,7 @@ AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-DROP
 DOMAIN,aet.spotify.com,REJECT,pre-matching
 
 [MITM]
-hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com, *-spclient.wg.spotify.com
+hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com, *-spclient.wg.spotify.com, api-partner.spotify.com
 
 [Map Local]
 # 广告链路兜底拦截，不跑脚本。响应形态要和客户端解码方式一致：
@@ -39,5 +39,8 @@ spotify-scroll = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclie
 # 不要匹配 remote-config-resolver：桌面版该接口返回 JSON，proto 按 protobuf
 # 解码会抛 invalid wire type
 spotify-proto = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:bootstrap/v1/bootstrap|user-customization-service/v1/customize|nebula/v1/configuration/attributes)/?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, timeout=30, script-path=https://raw.githubusercontent.com/Reukix/ukix/406b5f63dd461d551f1b03098d374bae5c7b1296/js/Spotify-proto.js
+
+# 桌面版首页 GraphQL：删全宽画布版块、广告 section
+spotify-pathfinder = type=http-response, pattern="^https://api-partner\.spotify\.com(?::443)?/pathfinder/", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=10, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-pathfinder-v1.js
 
 spotify-json = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:artistview/v1/artist|album-entity-view/v2/album)/", timeout=10, script-path=https://raw.githubusercontent.com/app2smile/rules/df6366a7024e0b3f0aa3510c5b791eea6f3cba89/js/spotify-json.js
