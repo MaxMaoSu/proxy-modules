@@ -7,7 +7,7 @@
 // 共同点：广告素材都放在 `pod` 下的 slot 数组里。清空数组、保留结构，
 // 客户端拿到的是「这一屏没有广告」，不是错误响应，因此不会触发重试或异常分支。
 //
-// 其它广告端点由 spotify-adblock 在 request 阶段返回空响应：
+// 其它广告端点由 url-rewrite / Map Local 在请求阶段合成响应，不跑脚本：
 //   gabo-receiver-service、pam-view-service、sponsoredplaylist、
 //   ad-logic/vN/config（protobuf）
 // ads/vN/config 不拦：实测回 {} 会让桌面版首页报「出错了」。
