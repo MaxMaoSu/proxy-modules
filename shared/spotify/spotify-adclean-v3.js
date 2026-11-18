@@ -15,7 +15,7 @@
 // 任何解析失败都原样放行，并把原因写进 script-logs/spotify-adclean.log。
 
 (() => {
-  const TAG = "adclean v2";
+  const TAG = "adclean v3";
 
   function toText(body) {
     if (typeof body === "string") return body;
@@ -77,9 +77,17 @@
       if (removed) out = { body: JSON.stringify(data) };
     }
   } catch (e) {
-    const head = raw ? raw.slice(0, 120).replace(/[\x00-\x1f]/g, ".") : "";
-    note = "error " + (e && e.message ? e.message : String(e)) +
-      " len=" + (raw ? raw.length : -1) + " head=" + head;
+    // ad-logic/prefetch 的响应固定超过 64KB（实测 len=65534/65536 被硬截断），
+    // 完整 JSON 拿不到，但头部已确认是 {"pod":{"stream":[...]}}。
+    // 直接回一个空 stream，等于这一轮没有可投的广告。
+    if (url.indexOf("ad-logic/prefetch") >= 0) {
+      out = { body: '{"pod":{"stream":[]}}' };
+      note = "prefetch forced empty pod";
+    } else {
+      const head = raw ? raw.slice(0, 120).replace(/[\x00-\x1f]/g, ".") : "";
+      note = "error " + (e && e.message ? e.message : String(e)) +
+        " len=" + (raw ? raw.length : -1) + " head=" + head;
+    }
   }
 
   console.log(TAG + " " + note + " url=" + url);
