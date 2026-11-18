@@ -12,7 +12,7 @@
 // 任何解析失败或结构不认识都原样放行，并把原因写进日志。
 
 (() => {
-  const TAG = "pathfinder v1";
+  const TAG = "pathfinder v2";
   // 不用裸 /Ad/：HomeFeedAddSectionData、HomeFeedAdaptiveSectionData 会被误伤。
   const AD_TYPENAME = /Ads?(?:Section|Slot|Break|Element|Card|Unit|Impression)/;
   const AD_URI = /\|(brand-ad|sponsored|canvas)$/i;
@@ -77,6 +77,6 @@
     note = "error " + (e && e.message ? e.message : String(e));
   }
 
-  console.log(TAG + " " + note + " url=" + $request.url);
+  console.log(TAG + " " + note + " url=" + String(($request && $request.url) || ""));
   $done(out ? { body: out.body } : {});
 })();
