@@ -68,9 +68,10 @@ http:
       # ad-logic/prefetch 超过 64KB；实测 0 仍截断（Unterminated string），给 16MB
       max-size: 16777216
       timeout: 10
-    # 【临时诊断】记录 quicksilver 消息接口的响应结构，用于定位全屏推广弹窗字段。
+    # quicksilver 消息：App 启动/首页触发的全屏推广弹窗（如 Premium 试用促销）由此下发。
+    # 低概率触发、无法随时复现，按结构清空 messages 数组，其余字段保留。
     - match: '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/quicksilver\/v[0-9]+\/messages'
-      name: spotify-qs-probe
+      name: spotify-quicksilver
       type: response
       require-body: true
       binary-mode: true
@@ -124,8 +125,8 @@ script-providers:
   spotify-json:
     url: https://raw.githubusercontent.com/app2smile/rules/df6366a7024e0b3f0aa3510c5b791eea6f3cba89/js/spotify-json.js
     interval: 86400
-  spotify-qs-probe:
-    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-quicksilver-probe-v2.js
+  spotify-quicksilver:
+    url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-quicksilver-v1.js
     interval: 86400
   spotify-adclean:
     url: https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-adclean-v3.js
