@@ -161,6 +161,12 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
   `{"pod":{"stream":[{"clickthrough":"https://adclick.g.doubleclick.net/..."}]}}`，
   即音频/视频广告 pod。脚本在解析失败时直接回 `{"pod":{"stream":[]}}`。
 - **`max-size: 0` 不要当"不限"**：5.0 实测大响应仍被截断在 64KB，一律写显式字节数（16MB）。
+- **全屏推广弹窗 = quicksilver 消息**：iPhone 首页低概率弹出的「US$0 试用 Premium」
+  由 `quicksilver/vN/messages` 下发（SpotX 里称 in-app messaging modal，模块是关特性开关）；
+  低概率无法随时复现，`spotify-quicksilver-v1.js` 递归清空名为 `messages` 的数组，
+  其余字段保留、找不到则放行。响应真实结构**未证实**（公开样本只有空 `{}`）：
+  下次弹窗出现时看 `script-logs/spotify-quicksilver.log` 是 `cleared=0` 还是命中。
+  副作用是该通道的所有 in-app 消息（含公告类）都会被清掉。
 - **实现基准**：改 Spotify 模块前先看 `SpotX-Official/SpotX` 与
   `SideloadLabs/EeveeSpotifyReincarnated` 的最新实现，接口、路径、字段名以它们为准。
 - **pathfinder 方案不适用当前桌面版**：SpotX 靠拦截 `api-partner.spotify.com/pathfinder`

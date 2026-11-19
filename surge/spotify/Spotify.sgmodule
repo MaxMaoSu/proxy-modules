@@ -37,11 +37,11 @@ spotify-search = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclie
 
 spotify-scroll = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/scrollsita/v[0-9]+/scroll/spotify(?:/[^?]*)?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, timeout=10, script-path=https://raw.githubusercontent.com/Reukix/ukix/406b5f63dd461d551f1b03098d374bae5c7b1296/js/Spotify-scroll.js
 
+# quicksilver 全屏推广弹窗：清空 messages 数组（用到 TextDecoder，需 webview）
+spotify-quicksilver = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/quicksilver/v[0-9]+/messages", requires-body=1, binary-body-mode=1, max-size=-1, engine=webview, timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-quicksilver-v1.js
+
 # 不要匹配 remote-config-resolver：桌面版该接口返回 JSON，proto 按 protobuf
 # 解码会抛 invalid wire type
-# quicksilver 全屏推广弹窗：清空 messages 数组
-spotify-quicksilver = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/quicksilver/v[0-9]+/messages", requires-body=1, binary-body-mode=1, max-size=-1, timeout=5, script-path=https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify-quicksilver-v1.js
-
 spotify-proto = type=http-response, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:bootstrap/v1/bootstrap|user-customization-service/v1/customize|nebula/v1/configuration/attributes)/?(?:\?.*)?$", requires-body=1, binary-body-mode=1, max-size=-1, timeout=30, script-path=https://raw.githubusercontent.com/Reukix/ukix/406b5f63dd461d551f1b03098d374bae5c7b1296/js/Spotify-proto.js
 
 spotify-json = type=http-request, pattern="^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:artistview/v1/artist|album-entity-view/v2/album)/", timeout=10, script-path=https://raw.githubusercontent.com/app2smile/rules/df6366a7024e0b3f0aa3510c5b791eea6f3cba89/js/spotify-json.js
