@@ -2,7 +2,8 @@
 // 定位后删除，改为正式过滤脚本。
 
 (() => {
-  const TAG = "qs-probe v1";
+  const TAG = "qs-probe v2";
+  const SINK = "http://10.0.0.2:8765/log";
   let note = "";
 
   function toText(body) {
@@ -37,6 +38,7 @@
     note = "error " + (e && e.message ? e.message : String(e));
   }
 
-  console.log(TAG + " " + note + " url=" + String(($request && $request.url) || ""));
-  $done({});
+  const line = TAG + " " + note + " url=" + String(($request && $request.url) || "");
+  console.log(line);
+  $httpClient.post({ url: SINK, headers: { "content-type": "text/plain" }, body: line }, () => $done({}));
 })();
