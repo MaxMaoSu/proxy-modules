@@ -6,8 +6,8 @@ desc: 解锁 Premium 账号属性、过滤首页全宽推广位
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png'
 author: MaxMaoSu
 category: 去广告
-version: 1.3.1
-date: 2026-11-18
+version: 1.3.2
+date: 2026-11-21
 openUrl: 'https://open.spotify.com/'
 
 rules:
@@ -39,6 +39,15 @@ http:
   url-rewrite:
     - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:sponsoredplaylist|ad-logic\/v[0-9]+\/config) - reject-200'
     - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/(?:gabo-receiver-service|pam-view-service) - reject-dict'
+    # CMP 营销消息：9.1.x 起 pendragon FetchMessage 下发全屏接管页与首页 Premium 横幅
+    # （「只需 US$0，即可体验 3 个月」即此类）。reject-200 回 200 + 0 字节 = 没有消息。
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/pendragon\/[^?#]*FetchMessage - reject-200'
+    # 推广报价：客户端据此渲染升级卡片与弹窗，{} 表示无可用报价
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/premium-marketing\/upsellOffer - reject-dict'
+    # 展示广告容器（搜索页、首页卡片）：0 字节 = 无广告可渲染
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/dac\/view\/v1\/ - reject-200'
+    # 开屏广告位
+    - '^https:\/\/(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?\/ad-on-app-open - reject-200'
   # 删掉条件请求头。服务器命中 ETag 会返回 304，而 304 没有响应体，
   # spotify-proto 拿到空 body 只能 passthrough，账号属性永远改不掉。
   # casita 首页也带上：命中 ETag 回 304 时没有 body，首页脚本拿不到数据只能放行。

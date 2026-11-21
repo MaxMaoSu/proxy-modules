@@ -47,6 +47,7 @@ Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变�
 |---|---|---|
 | 元信息 | `#!name =` / `#!desc =` / `icon:` / `author` 等 | `#!name=` / `#!desc=`；`#!icon`/`#!author`/`#!category` **非官方字段**，不写 |
 | 规则 | `rules:` 数组 | `[Rule]` 段，一行一条 |
+| 改写请求头 | `header-rewrite` 的 `request-del X` | `[Header Rewrite]`：`http-request <正则> header-del X`；**`request-del` 在 Surge 里是不报错的空操作** |
 | MITM | `http.mitm` 数组 | `[MITM]` 的 `hostname = %APPEND% a, b` |
 | 脚本 | `http.script` 的 `match/name/type/timeout` | `[Script]`：`NAME = type=http-request|http-response, pattern="…", …` |
 | 响应体 | `require-body: true` | `requires-body=1` |
@@ -60,8 +61,9 @@ Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变�
 Surge 的 `auto-quic-block` 默认开启（iOS 5.8+ / Mac 5.4+），命中 MITM 列表的 QUIC 连接会被自动阻断，
 所以 Surge 模块里不必再为 MITM 域名单独写 QUIC 拦截规则；Stash 没有这个能力，必须显式写规则。
 
-本机未安装 Surge，`surge/` 下的模块**按官方语法编写但未实机验证**；
-首次在 Surge 里启用时按「配置是否生效 → MITM → 脚本日志」三层各自确认一次。
+本机已在 Surge 6.12（Mac）与 6.0.1（iOS）上实机验证：模块启用、MITM 生效、
+脚本与 `[Map Local]` 均命中。Map Local 可用 `curl -x http://127.0.0.1:6152` 直接验证：
+被映射的 URL 返回 200 与配置的 body，未映射的照常透传（如 `quicksilver/v2/messages` 回 401）。
 
 ## 跨端同步
 
@@ -132,8 +134,11 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
 - **`remote-config-resolver` 不要交给 proto**：桌面版该接口返回 JSON，
   protobuf 解码抛 `invalid wire type`，异常会重置 WebKit 引擎，
   连带让同期 nebula 的脚本跑不掉。
-- **304 无 body**：服务器命中 ETag 返回 304 时脚本拿不到数据，用 `header-rewrite` 的
-  `request-del` 删 `If-None-Match` / `If-Modified-Since`（Stash 5.0 起覆写内生效）。
+- **304 无 body**：服务器命中 ETag 返回 304 时脚本拿不到数据，要删
+  `If-None-Match` / `If-Modified-Since`。Stash 用 `request-del`，Surge 用
+  `http-request <正则> header-del <头名>`。**Surge 里写 `request-del` 不会报错，只是永不命中**：
+  实测 iPhone 上 `nebula/v1/configuration/attributes` 的请求仍带 `if-none-match`，
+  响应 304、`spotify-proto` 拿到空 body 直接放行，账号属性改不掉。
 - **广告位都在 `ads/v3/ads?slots=…`**：`hpto` = 首页顶部全宽卡，
   `marquee` = 播放页歌词下方那张（实测 iPhone「广告 / Chase」卡片），`preroll` = 播前。
   响应形如 `{"pod":{"<slot>":[{id, clickthrough, ...}]}}`。
@@ -161,12 +166,21 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
   `{"pod":{"stream":[{"clickthrough":"https://adclick.g.doubleclick.net/..."}]}}`，
   即音频/视频广告 pod。脚本在解析失败时直接回 `{"pod":{"stream":[]}}`。
 - **`max-size: 0` 不要当"不限"**：5.0 实测大响应仍被截断在 64KB，一律写显式字节数（16MB）。
-- **全屏推广弹窗 = quicksilver 消息**：iPhone 首页低概率弹出的「US$0 试用 Premium」
-  由 `quicksilver/vN/messages` 下发（SpotX 里称 in-app messaging modal，模块是关特性开关）；
-  低概率无法随时复现，`spotify-quicksilver-v1.js` 递归清空名为 `messages` 的数组，
-  其余字段保留、找不到则放行。响应真实结构**未证实**（公开样本只有空 `{}`）：
-  下次弹窗出现时看 `script-logs/spotify-quicksilver.log` 是 `cleared=0` 还是命中。
-  副作用是该通道的所有 in-app 消息（含公告类）都会被清掉。
+- **全屏推广弹窗有两个通道**：
+  1. `pendragon/…/FetchMessage`：9.1.x 起 CMP（ClientMessagingPlatform）改用
+     `com.spotify.pendragon.v1.ClientMessageService` 的 FetchMessage / FetchMessageList /
+     FetchMessageForPreview 下发全屏接管页与首页 Premium 横幅（「只需 US$0，即可体验 3 个月」
+     即此类）。空 body 等于「没有消息」，已用 Map Local 直接回 0 字节，不跑脚本。
+  2. `quicksilver/vN/messages`：老通道，桌面版与部分 iOS 版本仍用（SpotX 里称
+     in-app messaging modal）。`spotify-quicksilver-v1.js` 递归清空名为 `messages` 的数组，
+     找不到则放行；副作用是公告类 in-app 消息也一并清掉。响应真实结构未证实。
+     判断通道是否命中看 logbook：脚本命中会有 `spotify-quicksilver` 的
+     「脚本开始执行」记录，没有记录说明该次弹窗不是这个通道下发的。
+- **推广与展示广告端点**（均用 Map Local 直接合成，不跑脚本）：
+  `premium-marketing/upsellOffer` 回 `{}`；`dac/view/v1/`（展示广告容器，
+  搜索页/首页卡片）与 `ad-on-app-open`（开屏）回 0 字节。
+  `trials-facade/start-trial` **不拦**：它只响应用户主动点「开始试用」，
+  拦截会破坏正常订阅流程。
 - **实现基准**：改 Spotify 模块前先看 `SpotX-Official/SpotX` 与
   `SideloadLabs/EeveeSpotifyReincarnated` 的最新实现，接口、路径、字段名以它们为准。
 - **pathfinder 方案不适用当前桌面版**：SpotX 靠拦截 `api-partner.spotify.com/pathfinder`

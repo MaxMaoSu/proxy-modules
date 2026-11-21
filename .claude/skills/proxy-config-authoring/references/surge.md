@@ -118,6 +118,22 @@ WebView 独立进程，最多 3 个并行，超出排队、排不上按超时算
 
 `[Map Local]` 只在 Rewrite 功能开启且请求经过 HTTP 引擎时生效，HTTPS 需要目标主机已 MITM。
 
+### Header Rewrite
+
+顺序固定为「方向 → URL 正则 → 动作 → 头名 → 值」：
+
+```
+http-request  ^https://example\.com/path$  header-del      Cookie
+http-request  ^https://example\.com/path$  header-add      DNT 1
+http-response ^https://example\.com/path$  header-replace  Content-Type application/json
+```
+
+方向可省略，省略即 `http-request`。动作只有 `header-add`（追加）、`header-del`（删除）、
+`header-replace`（改值，头不存在时不动）、`header-replace-regex`（值内正则替换，多一个模板参数）。
+
+**不要照搬 Stash 的 `request-del`**：Surge 不认识这个动作，整行被忽略且不报错，
+请求头原样发出。表现为依赖它的下游脚本永远拿不到 body（例如条件请求恒得 304）。
+
 ## 规则要点
 
 - 逻辑规则最多嵌套 10 层，`FINAL` 不能作子规则。
@@ -140,11 +156,16 @@ WebView 独立进程，最多 3 个并行，超出排队、排不上按超时算
 
 ## 验证
 
-本机没装 Surge 时只能静态校验，不要声称已生效：
+未接入 Surge 时只能静态校验，不要声称已生效：逐条比对正则与 Stash 版是否等价，
+`curl` 每个 `script-path` 确认 200。
 
-- 逐条比对正则与 Stash 版是否等价。
-- `curl` 每个 `script-path`，确认 200 且内容正确。
-- 在 CLAUDE.md 的模块说明里标「未实机验证」。
+接入后按三层各确认一次：
 
-装好后按三层各确认一次：模块已启用且无报错 → 目标域名证书 issuer 变为 Surge CA →
-脚本行为（日志/请求备注）出现预期变化。
+1. 模块已启用且无报错：`list_modules` 看 `enabled` 与各段行数。
+2. MITM 生效：请求详情里出现 `Enable MITM due to MITM hostname settings entry`。
+3. 行为命中：
+   - `[Map Local]`：`curl -x http://127.0.0.1:6152 -o /dev/null -w '%{http_code} %{size_download}'`，
+     映射中的 URL 返回 200 与配置的字节数，未映射的照常透传。
+   - `[Header Rewrite]`：请求详情的 `notes` 里出现
+     `[Rewrite] Matched header rewrite rule: …` 且 `remark` 为 `Modified by header rewrite rule`。
+   - 脚本：logbook 里查得到「脚本开始执行 / 脚本执行完毕」，再看脚本自己的日志。

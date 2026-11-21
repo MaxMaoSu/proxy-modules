@@ -19,11 +19,22 @@ hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com, *-spclient.w
 # ads/vN/config 不拦：实测回 {} 会让桌面版首页报「出错了」，首页依赖它渲染。
 ^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:sponsoredplaylist|ad-logic/v[0-9]+/config) data-type=text data=""
 ^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:gabo-receiver-service|pam-view-service) data-type=text data="{}" header="Content-Type:application/json"
+# CMP 营销消息：9.1.x 起 pendragon FetchMessage 下发全屏接管页与首页 Premium 横幅
+# （「只需 US$0，即可体验 3 个月」即此类）。空 body 等于「没有消息」。
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/pendragon/[^?#]*FetchMessage data-type=text data=""
+# 推广报价：客户端据此渲染升级卡片与弹窗。给 {} 表示无可用报价。
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/premium-marketing/upsellOffer data-type=text data="{}" header="Content-Type:application/json"
+# 展示广告容器（搜索页、首页的 Cartier / Ross 一类卡片），空 body = 无广告可渲染
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/dac/view/v1/ data-type=text data=""
+# 开屏广告位
+^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/ad-on-app-open data-type=text data=""
 
 [Header Rewrite]
-# 删掉条件请求头，避免服务器回 304 无 body 让下游 proto / 首页脚本拿不到数据
-^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$ request-del If-None-Match
-^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$ request-del If-Modified-Since
+# 删掉条件请求头，避免服务器回 304 无 body 让下游 proto / 首页脚本拿不到数据。
+# Surge 语法是 `http-request <正则> header-del <头名>`；Stash 的 request-del 在这里
+# 是不会报错的空操作（实测请求仍带 if-none-match，响应仍是 304）。
+http-request ^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$ header-del If-None-Match
+http-request ^https://(?:[A-Za-z0-9-]+-)?spclient(?:\.wg)?\.spotify\.com(?::443)?/(?:nebula/v1/configuration/attributes|bootstrap/v1/bootstrap|user-customization-service/v1/customize|casita/v[0-9]+/home(?:/[^?]*)?)/?(?:\?.*)?$ header-del If-Modified-Since
 
 [Script]
 # 首页 protobuf：清掉 |brand-ad section
