@@ -1,11 +1,12 @@
 #SUBSCRIBED https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/stash/spotify/Spotify.stoverride
 #!name = Spotify 解锁
-#!desc = 适配 Spotify Nebula 接口，解锁 Premium，过滤首页全宽推广位
+#!desc = 适配 Spotify Nebula 接口，解锁 Premium，过滤屏幕广告位
 name: Spotify 解锁
-desc: 解锁 Premium 账号属性、过滤首页全宽推广位
+desc: 适配 Spotify Nebula 接口，解锁 Premium，过滤屏幕广告位
 icon: 'https://raw.githubusercontent.com/MaxMaoSu/proxy-modules/main/shared/spotify/spotify.png'
 author: MaxMaoSu
 category: 去广告
+homepage: 'https://github.com/MaxMaoSu/proxy-modules'
 version: 1.3.2
 date: 2026-11-21
 openUrl: 'https://open.spotify.com/'

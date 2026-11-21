@@ -26,7 +26,10 @@
 
 | 结论 | 版本 / 日期 | 与文档的关系 |
 |---|---|---|
-| 本机未安装 Surge，`surge/` 下的模块按官方语法编写但未实机验证 | 2026-11-17 | — |
+| `[Header Rewrite]` 只认 `header-add` / `header-del` / `header-replace` / `header-replace-regex`；照搬 Stash 的 `request-del` 不报错、整行被忽略，请求头原样发出（表现为条件请求恒得 304） | Mac 6.12.0，2026-11-21；iOS 6.0.1 上观察到同一失败现象 | 与文档一致；文档未提醒跨客户端语法不能照搬 |
+| `[Map Local]` 的 `data-type=text data=""` 返回 200、0 字节、`content-type: text/plain`；命中 Map Local 后不再执行同一 URL 的脚本（请求备注只有 `Matched map local rule`） | Mac 6.12.0，2026-11-21 | 文档未说明两者的优先级 |
+| `#!category=` / `#!author=` / `#!icon=` / `#!homepage=` / `#!openUrl=` / `#!repo=` 手册未列，但会被解析进 `list_modules` 的 header；`#!category` 同时决定模块列表分组 | Mac 6.12.0，2026-11-21；iOS 6.0.1 仅在第三方模块（iRingo）上佐证 | 文档未记载 |
+| `[Map Local]` 可用 `curl -x http://127.0.0.1:6152 <URL>` 直接验证：映射中的回 200 与配置的 body，未映射的照常透传 | Mac 6.12.0，2026-11-21 | 文档未提供验证方法 |
 
 ## 版本门槛
 

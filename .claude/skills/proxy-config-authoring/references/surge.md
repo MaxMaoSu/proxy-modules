@@ -51,9 +51,12 @@ spotify-adclean = type=http-response, pattern="^https://…$", requires-body=1, 
 | `#!requirement=` | 版本/平台条件，如 `CORE_VERSION>=20`，支持 `&&` / `\|\|` |
 
 手册只列上面几项，但 Surge 实际会解析 `#!category=` / `#!author=` / `#!icon=` /
-`#!homepage=` / `#!openUrl=` / `#!version=` / `#!date=`：装了带这些头的模块后，
+`#!homepage=` / `#!openUrl=` / `#!repo=` / `#!version=` / `#!date=`：装了带这些头的模块后，
 `list_modules` 的 `header` 里能看到对应字段，`category` 同时决定模块列表的分组
-（不写就归到「未分类」）。实测 6.12；官方未文档化，属可用但需实测确认的字段。
+（不写就归到「未分类」）。Mac 6.12 实测；iOS 6.0.1 只在第三方模块（iRingo）上佐证，
+本仓库模块在 iOS 上未逐项复测。App 内是否显示图标与作者无法用 `list_modules` 判断，需目视确认。
+
+图标在 Panel 与策略组里另有写法：`argument=icon=` / `icon-url=`，与模块头无关。
 
 ## 参数表（Mac 5.5.0+）
 
