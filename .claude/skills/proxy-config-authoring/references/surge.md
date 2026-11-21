@@ -168,7 +168,7 @@ http-response ^https://example\.com/path$  header-replace  Content-Type applicat
 | 目的 | 命令 |
 |---|---|
 | 模块是否加载、各段行数与文本 | `module show "<模块名>"` |
-| 某次请求的改写结果与逐条 notes | `dump recent` 取 id，再看该条记录 |
+| 某次请求的改写结果与逐条 notes | `dump recent` 找 id，再用 MCP `list_requests` 传该 id 取完整记录（含 notes） |
 | 脚本是否执行、输出是什么 | `logbook <n>`，再 `script-log <脚本名> <session-id>` |
 
 本节只保留本仓库的判据。
