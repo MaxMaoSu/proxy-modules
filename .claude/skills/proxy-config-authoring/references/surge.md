@@ -50,8 +50,10 @@ spotify-adclean = type=http-response, pattern="^https://…$", requires-body=1, 
 | `#!arguments=` / `#!arguments-desc=` | 参数表（Mac 5.5.0+） |
 | `#!requirement=` | 版本/平台条件，如 `CORE_VERSION>=20`，支持 `&&` / `\|\|` |
 
-`#!icon` / `#!author` / `#!category` / `#!version` 官方未定义，写了不显示。
-图标只在 Panel/策略组里通过 `argument=icon=` 或 `icon-url=` 实现，与模块头无关。
+手册只列上面几项，但 Surge 实际会解析 `#!category=` / `#!author=` / `#!icon=` /
+`#!homepage=` / `#!openUrl=` / `#!version=` / `#!date=`：装了带这些头的模块后，
+`list_modules` 的 `header` 里能看到对应字段，`category` 同时决定模块列表的分组
+（不写就归到「未分类」）。实测 6.12；官方未文档化，属可用但需实测确认的字段。
 
 ## 参数表（Mac 5.5.0+）
 

@@ -45,7 +45,7 @@ Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变�
 
 | 能力 | Stash | Surge |
 |---|---|---|
-| 元信息 | `#!name =` / `#!desc =` / `icon:` / `author` 等 | `#!name=` / `#!desc=`；`#!icon`/`#!author`/`#!category` **非官方字段**，不写 |
+| 元信息 | `#!name =` / `#!desc =` / `icon:` / `author` 等 | `#!name=` / `#!desc=`；`#!category=` / `#!author=` / `#!icon=` / `#!homepage=` / `#!openUrl=` 官方手册未列，但 Surge 会解析并用于模块列表分组与展示（实测 6.12） |
 | 规则 | `rules:` 数组 | `[Rule]` 段，一行一条 |
 | 改写请求头 | `header-rewrite` 的 `request-del X` | `[Header Rewrite]`：`http-request <正则> header-del X`；**`request-del` 在 Surge 里是不报错的空操作** |
 | MITM | `http.mitm` 数组 | `[MITM]` 的 `hostname = %APPEND% a, b` |
