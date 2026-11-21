@@ -162,16 +162,29 @@ http-response ^https://example\.com/path$  header-replace  Content-Type applicat
 
 ## 验证
 
-未接入 Surge 时只能静态校验，不要声称已生效：逐条比对正则与 Stash 版是否等价，
+**运行时取证不在这里重复**：读写 Surge 运行状态统一用 skill `surge`（`surge-cli` 或
+同名的 MCP 工具，命令集一致）。常用三条：
+
+| 目的 | 命令 |
+|---|---|
+| 模块是否加载、各段行数与文本 | `module show "<模块名>"` |
+| 某次请求的改写结果与逐条 notes | `dump recent` 取 id，再看该条记录 |
+| 脚本是否执行、输出是什么 | `logbook <n>`，再 `script-log <脚本名> <session-id>` |
+
+本节只保留本仓库的判据。
+
+**未接入 Surge 时只能静态校验**，不要声称已生效：逐条比对正则与 Stash 版是否等价，
 `curl` 每个 `script-path` 确认 200。
 
 接入后按三层各确认一次：
 
-1. 模块已启用且无报错：`list_modules` 看 `enabled` 与各段行数。
-2. MITM 生效：请求详情里出现 `Enable MITM due to MITM hostname settings entry`。
-3. 行为命中：
-   - `[Map Local]`：`curl -x http://127.0.0.1:6152 -o /dev/null -w '%{http_code} %{size_download}'`，
-     映射中的 URL 返回 200 与配置的字节数，未映射的照常透传。
-   - `[Header Rewrite]`：请求详情的 `notes` 里出现
-     `[Rewrite] Matched header rewrite rule: …` 且 `remark` 为 `Modified by header rewrite rule`。
-   - 脚本：logbook 里查得到「脚本开始执行 / 脚本执行完毕」，再看脚本自己的日志。
+1. **模块加载完整**：`module show` 的各段行数与文件一致（Spotify 模块当前为 Rule 2、
+   MITM 1、Map Local 6、Header Rewrite 2、Script 7）。行数偏少说明模块被截断或装的是旧版。
+2. **MITM 生效**：请求 notes 出现 `Enable MITM due to MITM hostname settings entry`。
+3. **行为命中**：
+   - `[Map Local]`：请求备注为 `Map local rule matched`，响应头里 `content-length` 等于配置的字节数。
+     不依赖 App 的快速验证：`curl -x http://127.0.0.1:6152 -o /dev/null -w '%{http_code} %{size_download}'`。
+   - `[Header Rewrite]`：notes 出现 `[Rewrite] Matched header rewrite rule: …` 且备注为
+     `Modified by header rewrite rule`。
+   - 脚本：logbook 里有「脚本开始执行 / 脚本执行完毕」，备注为 `Modified by script <名>`；
+     应出现哪个脚本由模块的 pattern 决定，没有记录即该请求没匹配上或模块未启用。

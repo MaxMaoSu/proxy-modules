@@ -238,3 +238,7 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
 `.claude/skills/proxy-config-authoring`（写/改 Stash 覆写与 Surge 模块，每次动手前先跑
 `scripts/check-docs.sh` 核对官方文档）、`.claude/skills/stash-override-debug`（规则或脚本静默失效时排查）。
 只在本仓库会话加载。
+
+运行时取证用全局 skill `surge`（`surge-cli` 与同名 MCP 工具命令集一致）：`module show`、
+`dump recent`、`logbook`、`script-log`、`capture-session`。本仓库技能不重复这套用法，
+只写模块特有的判据。
