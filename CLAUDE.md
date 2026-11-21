@@ -64,7 +64,10 @@ Surge 的 `auto-quic-block` 默认开启（iOS 5.8+ / Mac 5.4+），命中 MITM 
 Surge 6.12（Mac）已实机验证：模块启用、MITM 生效、脚本与 `[Map Local]` 均命中。
 Map Local 可用 `curl -x http://127.0.0.1:6152` 直接验证：被映射的 URL 返回 200 与配置的 body，
 未映射的照常透传（如 `quicksilver/v2/messages` 回 401）。
-iOS 6.0.1 只验证到修复前的现象（请求带 `if-none-match`、响应 304）；安装新版模块后需复测一次。
+iOS 6.0.1 已验证修复后行为（Spotify 9.2.2）：`nebula/v1/configuration/attributes` 与
+`casita/v1/home` 不再带 `if-none-match`，响应由 304 变 200，`spotify-proto` 输出
+`body: true`（改写过）；`ad-logic/prefetch` 经 `spotify-adclean` 由 141226 字节压到 1628 字节。
+新增的 pendragon / dac / ad-on-app-open 拦截在 iPhone 上尚未遇到实际请求。
 
 `[Map Local]` 优先于 `[Script]`：同一 URL 命中 Map Local 后不再执行脚本（实测请求备注只有
 `Matched map local rule`）。Map Local 与脚本 pattern 有意重叠时，以 Map Local 的结果为准。
