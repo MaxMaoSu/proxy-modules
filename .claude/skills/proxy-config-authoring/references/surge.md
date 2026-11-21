@@ -56,8 +56,8 @@ spotify-adclean = type=http-response, pattern="^https://…$", requires-body=1, 
 （不写就归到「未分类」）。Mac 6.12 实测；iOS 6.0.1 只在第三方模块（iRingo）上佐证，
 本仓库模块在 iOS 上未逐项复测。App 内是否显示图标与作者无法用 `list_modules` 判断，需目视确认。
 
-图标另有两处写法，与模块头无关：Panel 用 `icon=`（SF Symbol 名）配 `icon-color=`；
-策略组用 `icon-url=`（Mac 6.5.0+）。
+图标另有两处写法，与模块头无关：Panel 用 `icon=`（SF Symbol 名）配 `icon-color=`
+（须省略 `style=`，否则该项按信息项渲染、不显示图标卡片）；策略组用 `icon-url=`（Mac 6.5.0+）。
 
 ## 参数表（Mac 5.5.0+）
 
