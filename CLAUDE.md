@@ -61,9 +61,13 @@ Stash 的「更新」按钮有时拉不到新内容（本地文件 mtime 不变�
 Surge 的 `auto-quic-block` 默认开启（iOS 5.8+ / Mac 5.4+），命中 MITM 列表的 QUIC 连接会被自动阻断，
 所以 Surge 模块里不必再为 MITM 域名单独写 QUIC 拦截规则；Stash 没有这个能力，必须显式写规则。
 
-本机已在 Surge 6.12（Mac）与 6.0.1（iOS）上实机验证：模块启用、MITM 生效、
-脚本与 `[Map Local]` 均命中。Map Local 可用 `curl -x http://127.0.0.1:6152` 直接验证：
-被映射的 URL 返回 200 与配置的 body，未映射的照常透传（如 `quicksilver/v2/messages` 回 401）。
+Surge 6.12（Mac）已实机验证：模块启用、MITM 生效、脚本与 `[Map Local]` 均命中。
+Map Local 可用 `curl -x http://127.0.0.1:6152` 直接验证：被映射的 URL 返回 200 与配置的 body，
+未映射的照常透传（如 `quicksilver/v2/messages` 回 401）。
+iOS 6.0.1 只验证到修复前的现象（请求带 `if-none-match`、响应 304）；安装新版模块后需复测一次。
+
+`[Map Local]` 优先于 `[Script]`：同一 URL 命中 Map Local 后不再执行脚本（实测请求备注只有
+`Matched map local rule`）。Map Local 与脚本 pattern 有意重叠时，以 Map Local 的结果为准。
 
 ## 跨端同步
 
@@ -158,7 +162,7 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
   不跑脚本：`sponsoredplaylist`、`ad-logic/vN/config` 是 protobuf 回 0 字节，
   `gabo-receiver-service`、`pam-view-service` 是 JSON 回 `{}`。
   **`ads/vN/config` 不能拦**：实测回 `{}` 后桌面版首页直接报「出错了」，首页依赖它渲染。
-  protobuf 给 `{}` 会让客户端解码抛异常。两层 match 不得重叠。
+  protobuf 给 `{}` 会让客户端解码抛异常。两层 match 尽量不重叠；有意重叠时以 Map Local 为准。
   adclean 保留脚本是因为它要按 `pod` 下任意键名清数组、还要兼容根数组与 `messages`，
   jq 写起来更脆。
 - **`ad-logic/prefetch` 固定超过 64KB 且不可解析**：实测 `len=65532~65536`，
@@ -179,6 +183,8 @@ API 密钥在 `~/.claude/secrets/stash-iphone-controller`（600），
 - **推广与展示广告端点**（均用 Map Local 直接合成，不跑脚本）：
   `premium-marketing/upsellOffer` 回 `{}`；`dac/view/v1/`（展示广告容器，
   搜索页/首页卡片）与 `ad-on-app-open`（开屏）回 0 字节。
+  `premium-marketing/upsellOffer` 是推广报价数据，回 `{}` 会连带隐藏 Premium 页的升级卡片；
+  这是与 EeveeSpotify 基准一致的取舍：目标是消除推广面，需要订阅时走网页端。
   `trials-facade/start-trial` **不拦**：它只响应用户主动点「开始试用」，
   拦截会破坏正常订阅流程。
 - **实现基准**：改 Spotify 模块前先看 `SpotX-Official/SpotX` 与
